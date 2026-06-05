@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML Digest — Machine Learning Research & Tutorials</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- HERO -->
+    <div style="border-bottom:1px solid var(--rule)">
+        <div class="hero">
+            <div class="hero-inner">
+                <!-- Lead story -->
+                <div>
+                    <div class="hero-kicker">Editor's Pick · June 2026</div>
+                    <h1>Attention Is All You Need: A Deep Dive into Transformer Architecture</h1>
+                    <p class="hero-desc">How a 2017 paper from Google Brain quietly dismantled thirty years of
+                        sequential thinking — and why that matters for everything from search to protein folding.
+                    </p>
+                    <div class="hero-meta">
+                        <div class="hero-author-chip">
+                            <div class="hac-avatar">AR</div>
+                            <span>Arjun Rao</span>
+                        </div>
+                        <div class="hmeta-dot"></div>
+                        <span>June 3, 2026</span>
+                        <div class="hmeta-dot"></div>
+                        <span>14 min</span>
+                    </div>
+                    <br>
+                    <a class="read-more" href="article-attention.html">Read article
+                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                            <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5"
+                                stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </a>
+                </div>
+                <!-- Aside -->
+                <div class="hero-aside">
+                    <div class="aside-label">Also trending</div>
+                    <a class="aside-item" href="article-rlhf.html">
+                        <span class="aside-num">01</span>
+                        <div class="aside-text">
+                            <div class="aside-title">RLHF Demystified: How Language Models Learn Human Preferences
+                            </div>
+                            <div class="aside-meta">Priya Menon · 9 min</div>
+                        </div>
+                    </a>
+                    <a class="aside-item" href="article-diffusion.html">
+                        <span class="aside-num">02</span>
+                        <div class="aside-text">
+                            <div class="aside-title">The Mathematics of Diffusion Models</div>
+                            <div class="aside-meta">Chen Wei · 11 min</div>
+                        </div>
+                    </a>
+                    <a class="aside-item" href="article-moe.html">
+                        <span class="aside-num">03</span>
+                        <div class="aside-text">
+                            <div class="aside-title">Mixture of Experts: Scaling Without the Cost</div>
+                            <div class="aside-meta">Sarah K. · 8 min</div>
+                        </div>
+                    </a>
+                    <a class="aside-item" href="article-flashattention.html">
+                        <span class="aside-num">04</span>
+                        <div class="aside-text">
+                            <div class="aside-title">FlashAttention 3: What Changed and Why It Matters</div>
+                            <div class="aside-meta">Dev Patel · 7 min</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAG ROW -->
+    <div class="tag-row" id="tag-container">
+        <a class="tag active" data-tag="all" href="#">All</a>
+        <a class="tag" data-tag="transformers" href="#">Transformers</a>
+        <a class="tag" data-tag="diffusion" href="#">Diffusion</a>
+        <a class="tag" data-tag="rl" href="#">Reinforcement Learning</a>
+        <a class="tag" data-tag="cv" href="#">Computer Vision</a>
+        <a class="tag" data-tag="nlp" href="#">NLP</a>
+        <a class="tag" data-tag="optimization" href="#">Optimization</a>
+        <a class="tag" data-tag="interpretability" href="#">Interpretability</a>
+        <a class="tag" data-tag="hardware" href="#">Hardware</a>
+        <a class="tag" data-tag="benchmarks" href="#">Benchmarks</a>
+        <a class="tag" data-tag="datasets" href="#">Datasets</a>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main-wrap">
+
+        <!-- Latest articles -->
+        <div class="section-label">
+            <span>Latest Articles</span>
+            <a href="archive.html">View all →</a>
+        </div>
+        <div class="card-grid" id="articles-grid">
+
+            <a class="card" href="article-rlhf.html" data-tags="rl,nlp,tutorials">
+                <div class="card-img">
+                    <svg class="card-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="320" height="180" fill="#f5f0e8" />
+                        <circle cx="160" cy="90" r="55" fill="none" stroke="#e2dfd8" stroke-width="1" />
+                        <circle cx="160" cy="90" r="35" fill="none" stroke="#e2dfd8" stroke-width="1" />
+                        <!-- reward loop arrows -->
+                        <path d="M160 35 A55 55 0 0 1 215 90" fill="none" stroke="#b5451b" stroke-width="2"
+                            stroke-linecap="round" />
+                        <path d="M215 90 A55 55 0 0 1 160 145" fill="none" stroke="#1d4ed8" stroke-width="2"
+                            stroke-linecap="round" />
+                        <path d="M160 145 A55 55 0 0 1 105 90" fill="none" stroke="#b5451b" stroke-width="2"
+                            stroke-linecap="round" />
+                        <path d="M105 90 A55 55 0 0 1 160 35" fill="none" stroke="#1d4ed8" stroke-width="2"
+                            stroke-linecap="round" />
+                        <circle cx="160" cy="90" r="18" fill="#1d4ed8" opacity=".12" />
+                        <text x="160" y="95" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="10"
+                            fill="#1d4ed8" font-weight="500">RLHF</text>
+                        <text x="160" y="26" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9"
+                            fill="#b5451b">Human feedback</text>
+                        <text x="222" y="93" font-family="'IBM Plex Mono',monospace" font-size="9"
+                            fill="#1d4ed8">Reward</text>
+                        <text x="160" y="162" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9"
+                            fill="#b5451b">Policy update</text>
+                    </svg>
+                </div>
+                <div class="card-kicker">Reinforcement Learning</div>
+                <div class="card-title">RLHF Demystified: How Language Models Learn Human Preferences</div>
+                <div class="card-desc">Reinforcement learning from human feedback sounds complex — but the core loop
+                    is surprisingly elegant. We trace it from reward modelling to proximal policy optimisation.
+                </div>
+                <div class="card-meta">
+                    <span>Priya Menon</span>
+                    <div class="card-meta-dot"></div>
+                    <span>May 28, 2026</span>
+                    <div class="card-meta-dot"></div>
+                    <span>9 min</span>
+                </div>
+            </a>
+
+            <a class="card" href="article-diffusion.html" data-tags="diffusion,cv,papers">
+                <div class="card-img">
+                    <svg class="card-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="320" height="180" fill="#f5f0e8" />
+                        <!-- noise-to-image left to right -->
+                        <g opacity="0.9">
+                            <rect x="22" y="50" width="56" height="80" rx="4" fill="#e8e4db" stroke="#ccc"
+                                stroke-width="0.5" />
+                            <!-- noise dots -->
+                            <circle cx="35" cy="65" r="2.5" fill="#9a9a92" opacity=".7" />
+                            <circle cx="45" cy="58" r="1.5" fill="#b5451b" opacity=".5" />
+                            <circle cx="55" cy="72" r="3" fill="#1d4ed8" opacity=".4" />
+                            <circle cx="38" cy="82" r="2" fill="#9a9a92" opacity=".6" />
+                            <circle cx="65" cy="63" r="2.5" fill="#b5451b" opacity=".3" />
+                            <circle cx="50" cy="95" r="2" fill="#1d4ed8" opacity=".5" />
+                            <circle cx="40" cy="105" r="3" fill="#9a9a92" opacity=".4" />
+                            <circle cx="60" cy="98" r="1.5" fill="#b5451b" opacity=".6" />
+                            <circle cx="70" cy="88" r="2" fill="#9a9a92" opacity=".5" />
+                            <circle cx="32" cy="115" r="2.5" fill="#1d4ed8" opacity=".4" />
+                            <circle cx="58" cy="115" r="2" fill="#9a9a92" opacity=".6" />
+                            <text x="50" y="144" text-anchor="middle" font-family="'IBM Plex Mono',monospace"
+                                font-size="8" fill="#9a9a92">t=T (noise)</text>
+                        </g>
+                        <!-- arrow -->
+                        <path d="M90 90 L130 90" stroke="#b5451b" stroke-width="1.5" stroke-linecap="round"
+                            marker-end="url(#dh)" />
+                        <text x="110" y="82" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8"
+                            fill="#b5451b">denoise</text>
+                        <!-- mid step -->
+                        <rect x="132" y="50" width="56" height="80" rx="4" fill="#e8e4db" stroke="#ccc"
+                            stroke-width="0.5" />
+                        <rect x="145" y="65" width="30" height="22" rx="3" fill="#b5451b" opacity=".25" />
+                        <rect x="142" y="90" width="38" height="16" rx="3" fill="#1d4ed8" opacity=".18" />
+                        <circle cx="175" cy="70" r="8" fill="#b5451b" opacity=".2" />
+                        <text x="160" y="144" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8"
+                            fill="#9a9a92">t=T/2</text>
+                        <!-- arrow -->
+                        <path d="M200 90 L240 90" stroke="#b5451b" stroke-width="1.5" stroke-linecap="round"
+                            marker-end="url(#dh)" />
+                        <text x="220" y="82" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8"
+                            fill="#b5451b">denoise</text>
+                        <!-- clean image -->
+                        <rect x="242" y="50" width="56" height="80" rx="4" fill="#e8e4db" stroke="#ccc"
+                            stroke-width="0.5" />
+                        <circle cx="270" cy="80" r="16" fill="#b5451b" opacity=".35" />
+                        <rect x="252" y="100" width="36" height="8" rx="2" fill="#1d4ed8" opacity=".3" />
+                        <rect x="256" y="112" width="28" height="5" rx="2" fill="#1d4ed8" opacity=".2" />
+                        <text x="270" y="144" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8"
+                            fill="#9a9a92">t=0 (image)</text>
+                        <defs>
+                            <marker id="dh" viewBox="0 0 8 8" refX="6" refY="4" markerWidth="5" markerHeight="5"
+                                orient="auto-start-reverse">
+                                <path d="M1 1L7 4L1 7" fill="none" stroke="#b5451b" stroke-width="1.5"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+                <div class="card-kicker">Generative Models</div>
+                <div class="card-title">The Mathematics of Diffusion Models</div>
+                <div class="card-desc">Stable Diffusion, DALL-E, Midjourney — they all share a surprisingly elegant
+                    mathematical foundation. We derive the score-matching objective from first principles.</div>
+                <div class="card-meta">
+                    <span>Chen Wei</span>
+                    <div class="card-meta-dot"></div>
+                    <span>May 22, 2026</span>
+                    <div class="card-meta-dot"></div>
+                    <span>11 min</span>
+                </div>
+            </a>
+
+            <a class="card" href="article-moe.html" data-tags="transformers,optimization,research">
+                <div class="card-img">
+                    <svg class="card-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="320" height="180" fill="#f5f0e8" />
+                        <!-- MoE diagram -->
+                        <!-- input token -->
+                        <rect x="130" y="20" width="60" height="28" rx="4" fill="#1d4ed8" opacity=".15" stroke="#1d4ed8"
+                            stroke-width="0.5" stroke-opacity=".4" />
+                        <text x="160" y="39" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9"
+                            fill="#1d4ed8">input</text>
+                        <!-- router -->
+                        <path d="M160 48 L160 65" stroke="#9a9a92" stroke-width="1" stroke-linecap="round" />
+                        <rect x="128" y="65" width="64" height="24" rx="4" fill="#e8e4db" stroke="#ccc"
+                            stroke-width="0.5" />
+                        <text x="160" y="81" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9"
+                            fill="#3d3d3a">Router</text>
+                        <!-- fan out -->
+                        <path d="M145 89 L90 115" stroke="#b5451b" stroke-width="1.2" stroke-linecap="round"
+                            stroke-dasharray="3 2" />
+                        <path d="M155 89 L140 115" stroke="#b5451b" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M165 89 L180 115" stroke="#9a9a92" stroke-width="1" stroke-linecap="round"
+                            stroke-dasharray="3 2" />
+                        <path d="M175 89 L230 115" stroke="#9a9a92" stroke-width="1" stroke-linecap="round"
+                            stroke-dasharray="3 2" />
+                        <!-- experts -->
+                        <rect x="60" y="115" width="52" height="28" rx="4" fill="#e8e4db" stroke="#ccc"
+                            stroke-width="0.5" opacity=".5" />
+                        <text x="86" y="133" text-anchor="middle" font-family="'IBM Plex Mono',monospace"
+                            font-size="8.5" fill="#9a9a92">Expert 1</text>
+                        <rect x="120" y="115" width="52" height="28" rx="4" fill="#b5451b" opacity=".18"
+                            stroke="#b5451b" stroke-width="0.5" stroke-opacity=".5" />
+                        <text x="146" y="133" text-anchor="middle" font-family="'IBM Plex Mono',monospace"
+                            font-size="8.5" fill="#b5451b">Expert 2 ✓</text>
+                        <rect x="180" y="115" width="52" height="28" rx="4" fill="#e8e4db" stroke="#ccc"
+                            stroke-width="0.5" opacity=".5" />
+                        <text x="206" y="133" text-anchor="middle" font-family="'IBM Plex Mono',monospace"
+                            font-size="8.5" fill="#9a9a92">Expert 3</text>
+                        <rect x="200" y="115" width="52" height="28" rx="4" fill="#e8e4db" stroke="#ccc"
+                            stroke-width="0.5" opacity=".3" x="240" />
+                        <rect x="240" y="115" width="42" height="28" rx="4" fill="#e8e4db" stroke="#ccc"
+                            stroke-width="0.5" opacity=".4" />
+                        <text x="261" y="133" text-anchor="middle" font-family="'IBM Plex Mono',monospace"
+                            font-size="8.5" fill="#9a9a92">Expert N</text>
+                        <text x="160" y="162" text-anchor="middle" font-family="'IBM Plex Mono',monospace"
+                            font-size="8.5" fill="#9a9a92">Only top-k experts activated per token</text>
+                    </svg>
+                </div>
+                <div class="card-kicker">Architecture</div>
+                <div class="card-title">Mixture of Experts: Scaling Without the Cost</div>
+                <div class="card-desc">Sparse activation means a trillion-parameter model can cost the same to run
+                    as a dense 7B model. We examine how routing decisions are made and what goes wrong.</div>
+                <div class="card-meta">
+                    <span>Sarah K.</span>
+                    <div class="card-meta-dot"></div>
+                    <span>May 18, 2026</span>
+                    <div class="card-meta-dot"></div>
+                    <span>8 min</span>
+                </div>
+            </a>
+
+            <!-- FineWeb Card -->
+            <div class="card" data-tags="nlp,benchmarks,datasets,research">
+                <div class="card-img">
+                    <svg class="card-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="320" height="180" fill="#f5f0e8" />
+                        <path d="M120 40 L200 40 A40 10 0 0 1 200 50 L120 50 A40 10 0 0 1 120 40 Z" fill="#b5451b" opacity=".3"/>
+                        <path d="M120 50 L120 120 A40 15 0 0 0 200 120 L200 50 A40 15 0 0 1 120 50 Z" fill="#b5451b" opacity=".15"/>
+                        <ellipse cx="160" cy="45" rx="40" ry="10" fill="#b5451b" opacity=".4"/>
+                        <line x1="160" y1="120" x2="160" y2="155" stroke="#b5451b" stroke-width="1.5" stroke-dasharray="3 3"/>
+                        <circle cx="160" cy="155" r="8" fill="#1d4ed8" opacity=".2"/>
+                        <text x="160" y="158" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#1d4ed8">Clean Tokens</text>
+                    </svg>
+                </div>
+                <div class="card-kicker">Datasets & Corpora</div>
+                <div class="card-title">The FineWeb Dataset: How 15T Tokens Were Curated</div>
+                <div class="card-desc">We look at the data filtering pipeline of FineWeb: from heuristic quality filters to FastText classifiers, deduplication, and toxic text scrubbers.</div>
+                <div class="card-meta">
+                    <span>Arjun Rao</span>
+                    <div class="card-meta-dot"></div>
+                    <span>May 2, 2026</span>
+                    <div class="card-meta-dot"></div>
+                    <span>12 min</span>
+                </div>
+            </div>
+
+            <!-- RoPE Card -->
+            <div class="card" data-tags="transformers,nlp,tutorials">
+                <div class="card-img">
+                    <svg class="card-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="320" height="180" fill="#f5f0e8" />
+                        <circle cx="160" cy="90" r="50" fill="none" stroke="#e2dfd8" stroke-width="1"/>
+                        <line x1="160" y1="90" x2="210" y2="90" stroke="#9a9a92" stroke-width="1"/>
+                        <line x1="160" y1="90" x2="195" y2="55" stroke="#b5451b" stroke-width="2"/>
+                        <path d="M185 90 A25 25 0 0 0 178 72" fill="none" stroke="#b5451b" stroke-width="1.5"/>
+                        <text x="188" y="82" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#b5451b">θ</text>
+                        <text x="160" y="155" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#1d4ed8">Rotary Embedding (RoPE)</text>
+                    </svg>
+                </div>
+                <div class="card-kicker">Positional Embeddings</div>
+                <div class="card-title">RoPE: Rotary Position Embeddings Explained</div>
+                <div class="card-desc">Why absolute positional encodings fail at long contexts, and how rotating query and key vectors in 2D subspaces preserves relative distance.</div>
+                <div class="card-meta">
+                    <span>Arjun Rao</span>
+                    <div class="card-meta-dot"></div>
+                    <span>Mar 15, 2026</span>
+                    <div class="card-meta-dot"></div>
+                    <span>8 min</span>
+                </div>
+            </div>
+
+            <!-- BitNet Card -->
+            <div class="card" data-tags="hardware,optimization,research,tutorials">
+                <div class="card-img">
+                    <svg class="card-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="320" height="180" fill="#f5f0e8" />
+                        <rect x="70" y="70" width="45" height="40" rx="3" fill="#b5451b" opacity=".15"/>
+                        <text x="92" y="95" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="14" fill="#b5451b" font-weight="600">-1</text>
+                        <rect x="137" y="70" width="45" height="40" rx="3" fill="#e8e4db"/>
+                        <text x="160" y="95" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="14" fill="#3d3d3a" font-weight="600">0</text>
+                        <rect x="205" y="70" width="45" height="40" rx="3" fill="#1d4ed8" opacity=".15"/>
+                        <text x="227" y="95" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="14" fill="#1d4ed8" font-weight="600">+1</text>
+                        <text x="160" y="145" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#6b6b65">Ternary Weights {-1, 0, 1}</text>
+                    </svg>
+                </div>
+                <div class="card-kicker">Extreme Quantization</div>
+                <div class="card-title">BitNet: Training 1.58-bit LLMs from First Principles</div>
+                <div class="card-desc">Binary and ternary quantizations represent a massive paradigm shift. We explain how models function when weights are restricted to {-1, 0, 1}.</div>
+                <div class="card-meta">
+                    <span>Sarah K.</span>
+                    <div class="card-meta-dot"></div>
+                    <span>Mar 8, 2026</span>
+                    <div class="card-meta-dot"></div>
+                    <span>13 min</span>
+                </div>
+            </div>
+
+            <!-- Common Crawl Card -->
+            <div class="card" data-tags="nlp,optimization,datasets,tutorials">
+                <div class="card-img">
+                    <svg class="card-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="320" height="180" fill="#f5f0e8" />
+                        <line x1="80" y1="40" x2="240" y2="40" stroke="#b5451b" stroke-width="1"/>
+                        <line x1="80" y1="90" x2="240" y2="90" stroke="#b5451b" stroke-width="1"/>
+                        <line x1="80" y1="140" x2="240" y2="140" stroke="#b5451b" stroke-width="1"/>
+                        <circle cx="120" cy="40" r="10" fill="#1d4ed8" opacity=".2"/>
+                        <circle cx="200" cy="90" r="10" fill="#1d4ed8" opacity=".2"/>
+                        <circle cx="160" cy="140" r="10" fill="#1d4ed8" opacity=".2"/>
+                        <text x="160" y="165" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#3d3d3a">Data Ingestion Stages</text>
+                    </svg>
+                </div>
+                <div class="card-kicker">Data Pipeline</div>
+                <div class="card-title">Common Crawl Demystified: Curating Clean Corpora</div>
+                <div class="card-desc">Processing petabytes of raw web scrapes is the unsung hero of LLM training. We examine text extraction algorithms and minhash deduplication.</div>
+                <div class="card-meta">
+                    <span>Sarah K.</span>
+                    <div class="card-meta-dot"></div>
+                    <span>Apr 20, 2026</span>
+                    <div class="card-meta-dot"></div>
+                    <span>15 min</span>
+                </div>
+            </div>
+
+            <!-- LAION-5B Card -->
+            <div class="card" data-tags="cv,diffusion,datasets,papers">
+                <div class="card-img">
+                    <svg class="card-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="320" height="180" fill="#f5f0e8" />
+                        <rect x="70" y="50" width="50" height="50" rx="3" fill="#1d4ed8" opacity=".1"/>
+                        <rect x="135" y="50" width="50" height="50" rx="3" fill="#1d4ed8" opacity=".1"/>
+                        <rect x="200" y="50" width="50" height="50" rx="3" fill="#1d4ed8" opacity=".1"/>
+                        <line x1="95" y1="100" x2="160" y2="135" stroke="#b5451b" stroke-width="1"/>
+                        <line x1="160" y1="100" x2="160" y2="135" stroke="#b5451b" stroke-width="1"/>
+                        <line x1="225" y1="100" x2="160" y2="135" stroke="#b5451b" stroke-width="1"/>
+                        <circle cx="160" cy="135" r="8" fill="#b5451b" opacity=".3"/>
+                        <text x="160" y="160" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#b5451b">CLIP Filtering</text>
+                    </svg>
+                </div>
+                <div class="card-kicker">Visual Corpora Beat</div>
+                <div class="card-title">LAION-5B: Auditing the World's Largest Visual Dataset</div>
+                <div class="card-desc">A detailed inspection of visual pre-training corpora. We discuss clip-score filtering, safety classifiers, and representation bias.</div>
+                <div class="card-meta">
+                    <span>Chen Wei</span>
+                    <div class="card-meta-dot"></div>
+                    <span>Apr 15, 2026</span>
+                    <div class="card-meta-dot"></div>
+                    <span>14 min</span>
+                </div>
+            </div>
+
+            <!-- Synthetic Data Card -->
+            <div class="card" data-tags="optimization,transformers,datasets,research">
+                <div class="card-img">
+                    <svg class="card-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="320" height="180" fill="#f5f0e8" />
+                        <path d="M160 30 A60 60 0 0 1 220 90 A60 60 0 0 1 160 150 A60 60 0 0 1 100 90 A60 60 0 0 1 160 30 Z" fill="none" stroke="#1d4ed8" stroke-width="1.5" stroke-dasharray="4 4"/>
+                        <circle cx="160" cy="90" r="25" fill="#b5451b" opacity=".2"/>
+                        <text x="160" y="93" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="8" fill="#b5451b">Autoloop</text>
+                        <text x="160" y="165" text-anchor="middle" font-family="'IBM Plex Mono',monospace" font-size="9" fill="#3d3d3a">Model Collapse Feedback</text>
+                    </svg>
+                </div>
+                <div class="card-kicker">Self-Training</div>
+                <div class="card-title">Synthetic Data: Can Models Learn on Their Own Outputs?</div>
+                <div class="card-desc">Exploring model collapse, synthetic dataset contamination, and how architectures can maintain entropy when learning from generated tokens.</div>
+                <div class="card-meta">
+                    <span>Priya Menon</span>
+                    <div class="card-meta-dot"></div>
+                    <span>Apr 10, 2026</span>
+                    <div class="card-meta-dot"></div>
+                    <span>10 min</span>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Featured / long reads -->
+        <div class="section-label">
+            <span>Long Reads</span>
+            <a href="archive.html">View all →</a>
+        </div>
+        <div class="featured-row" id="long-reads-grid">
+            <a class="feat-card" href="article-mechanistic.html" data-tags="interpretability,papers">
+                <div class="feat-num">01</div>
+                <div class="feat-body">
+                    <div class="feat-kicker">Interpretability</div>
+                    <div class="feat-title">Inside the Black Box: What Mechanistic Interpretability Has Found So Far
+                    </div>
+                    <div class="feat-desc">Circuits, superposition, and features — a field-level overview of what
+                        we've learned by reverse-engineering transformer weights.</div>
+                    <div class="feat-meta">Yuki Tanaka · May 15, 2026 · 18 min</div>
+                </div>
+            </a>
+            <a class="feat-card" href="article-custom-silicon.html" data-tags="hardware,research">
+                <div class="feat-num">02</div>
+                <div class="feat-body">
+                    <div class="feat-kicker">Hardware</div>
+                    <div class="feat-title">Why GPUs Aren't Enough: The Case for Custom AI Silicon</div>
+                    <div class="feat-desc">TPUs, Groq, Cerebras, Tenstorrent — a detailed look at why matrix
+                        multiplication demands purpose-built silicon and what the tradeoffs really are.</div>
+                    <div class="feat-meta">Marcus Osei · May 10, 2026 · 16 min</div>
+                </div>
+            </a>
+            <a class="feat-card" href="article-benchmark-problem.html" data-tags="benchmarks,research">
+                <div class="feat-num">03</div>
+                <div class="feat-body">
+                    <div class="feat-kicker">Benchmarks</div>
+                    <div class="feat-title">The Benchmark Problem: Why Leaderboards Don't Tell the Full Story</div>
+                    <div class="feat-desc">MMLU, HumanEval, GPQA — why every major benchmark has already been
+                        partially contaminated and what we should measure instead.</div>
+                    <div class="feat-meta">Anika Sharma · May 5, 2026 · 13 min</div>
+                </div>
+            </a>
+            <a class="feat-card" href="article-optimizers.html" data-tags="optimization,tutorials">
+                <div class="feat-num">04</div>
+                <div class="feat-body">
+                    <div class="feat-kicker">Optimization</div>
+                    <div class="feat-title">AdamW, Muon, and Why the Optimizer Still Matters</div>
+                    <div class="feat-desc">The choice of optimiser is one of the most underappreciated variables in
+                        training. We trace the history from SGD to the latest muon experiments.</div>
+                    <div class="feat-meta">Li Jian · Apr 28, 2026 · 12 min</div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="newsletter">
+            <div class="nl-left">
+                <div class="nl-tag">Weekly digest</div>
+                <div class="nl-title">Stay sharp on what's moving the field</div>
+                <div class="nl-sub">One email every Friday. Key papers, tutorials, and the context to understand
+                    them. No noise.</div>
+            </div>
+            <div class="nl-form">
+                <input class="nl-input" id="nl-email-input" type="email" placeholder="your@email.com">
+                <button class="nl-btn" id="nl-subscribe-btn">Subscribe</button>
+            </div>
+        </div>
+
+
+    </div><!-- /main-wrap -->
+
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for
+                        practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Client-side Scripts -->
+    <script>
+        // --- Hamburger Menu Logic ---
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+
+        // Close mobile menu on click outside
+        document.addEventListener('click', (e) => {
+            if (!hamburger.contains(e.target) && !mobileMenu.contains(e.target)) {
+                hamburger.classList.remove('open');
+                mobileMenu.style.display = 'none';
+            }
+        });
+
+        // --- Tag Filtering Logic ---
+        const tags = document.querySelectorAll('#tag-container .tag');
+        const cards = document.querySelectorAll('#articles-grid .card');
+        const featCards = document.querySelectorAll('#long-reads-grid .feat-card');
+
+        function filterByTag(selectedTag) {
+            tags.forEach(t => {
+                if (t.getAttribute('data-tag') === selectedTag) {
+                    t.classList.add('active');
+                } else {
+                    t.classList.remove('active');
+                }
+            });
+
+            // Filter latest cards
+            cards.forEach(card => {
+                const cardTags = card.getAttribute('data-tags').split(',');
+                if (selectedTag === 'all' || cardTags.includes(selectedTag)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // Filter featured cards
+            featCards.forEach(card => {
+                const cardTags = card.getAttribute('data-tags').split(',');
+                if (selectedTag === 'all' || cardTags.includes(selectedTag)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        tags.forEach(tag => {
+            tag.addEventListener('click', (e) => {
+                e.preventDefault();
+                const selectedTag = tag.getAttribute('data-tag');
+                filterByTag(selectedTag);
+                
+                // Update URL parameter without reloading
+                const url = new URL(window.location);
+                if (selectedTag === 'all') {
+                    url.searchParams.delete('tag');
+                } else {
+                    url.searchParams.set('tag', selectedTag);
+                }
+                window.history.pushState({}, '', url);
+            });
+        });
+
+        // Check for tag in URL on load
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const urlTag = params.get('tag');
+            if (urlTag) {
+                // Map full-name tags to short codes
+                const tagMapping = {
+                    'transformers': 'transformers',
+                    'diffusion': 'diffusion',
+                    'reinforcement learning': 'rl',
+                    'reinforcement%20learning': 'rl',
+                    'computer vision': 'cv',
+                    'computer%20vision': 'cv',
+                    'nlp': 'nlp',
+                    'optimization': 'optimization',
+                    'interpretability': 'interpretability',
+                    'hardware': 'hardware',
+                    'benchmarks': 'benchmarks',
+                    'datasets': 'datasets'
+                };
+                
+                const normalized = urlTag.toLowerCase();
+                const mappedCode = tagMapping[normalized] || normalized;
+                
+                // Find matching tag element and trigger click logic
+                const matchedTagElement = Array.from(tags).find(t => t.getAttribute('data-tag') === mappedCode || t.textContent.toLowerCase() === normalized);
+                if (matchedTagElement) {
+                    filterByTag(matchedTagElement.getAttribute('data-tag'));
+                }
+            }
+        });
+
+        // --- Newsletter Form Validation ---
+        const nlInput = document.getElementById('nl-email-input');
+        const nlBtn = document.getElementById('nl-subscribe-btn');
+
+        nlBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const email = nlInput.value.trim();
+            if (!email) {
+                alert('Please enter your email address.');
+                return;
+            }
+            if (!/\S+@\S+\.\S+/.test(email)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+            nlBtn.textContent = '✓ Subscribed';
+            nlBtn.style.background = 'var(--success)';
+            nlInput.value = '';
+            nlInput.disabled = true;
+        });
+    </script>
+</body>
+
+</html>

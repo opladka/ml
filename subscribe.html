@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscribe — ML Digest</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .subscribe-card {
+            max-width: 540px;
+            margin: 40px auto;
+            padding: 32px;
+            background: var(--bg2);
+            border: 1px solid var(--rule);
+            border-radius: 8px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            font-family: var(--mono);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--ink2);
+            margin-bottom: 6px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--rule);
+            background: var(--bg);
+            border-radius: 4px;
+            font-family: var(--sans);
+            font-size: 14px;
+            outline: none;
+        }
+        .form-control:focus {
+            border-color: var(--accent);
+        }
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: var(--ink2);
+            cursor: pointer;
+        }
+        .subscribe-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .subscribe-btn:hover {
+            opacity: 0.9;
+        }
+        .success-box {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .success-icon {
+            font-size: 48px;
+            color: var(--success);
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrap">
+        <div class="subscribe-card" id="subscription-container">
+            <div id="subscribe-form-content">
+                <div class="nl-tag" style="margin-bottom: 12px;">Newsletter Signup</div>
+                <h2 style="font-family: var(--serif); font-weight: 600; font-size: 24px; margin-bottom: 8px;">Stay ahead of the curve</h2>
+                <p style="font-size: 14px; color: var(--ink3); margin-bottom: 24px; line-height: 1.6;">
+                    Join over 45,000 engineers, researchers, and practitioners who receive our technical deep dives directly in their inbox.
+                </p>
+
+                <form id="subs-form">
+                    <div class="form-group">
+                        <label for="subs-name">Your Name</label>
+                        <input type="text" id="subs-name" class="form-control" placeholder="Arjun" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subs-email">Email Address</label>
+                        <input type="email" id="subs-email" class="form-control" placeholder="arjun@university.edu" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select Topics of Interest</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="topic" value="transformers" checked> Transformers & LLMs
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="topic" value="diffusion" checked> Diffusion & Generative Models
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="topic" value="rl"> Reinforcement Learning & RLHF
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="topic" value="hardware"> Custom AI Silicon & Systems Optimization
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Delivery Frequency</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="radio" name="freq" value="weekly" checked> Weekly Digest (Every Friday morning)
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="radio" name="freq" value="alerts"> Immediate (Get notified as articles drop)
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="subscribe-btn">Complete Subscription</button>
+                </form>
+            </div>
+
+            <!-- Success message -->
+            <div class="success-box" id="success-message">
+                <div class="success-icon">✓</div>
+                <h2 style="font-family: var(--serif); font-size: 22px; font-weight: 600; margin-bottom: 8px;">You're subscribed!</h2>
+                <p style="font-size: 14px; color: var(--ink3); line-height: 1.6; max-width: 380px; margin: 0 auto 24px;">
+                    We've sent a validation link to <strong id="sent-to-email"></strong>. Please click the link to confirm your delivery choices.
+                </p>
+                <a href="index.html" class="read-more" style="justify-content: center;">Return to homepage</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Script Drawer and Logic -->
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+
+        // Form Submit
+        const form = document.getElementById('subs-form');
+        const formContent = document.getElementById('subscribe-form-content');
+        const successBox = document.getElementById('success-message');
+        const displayEmail = document.getElementById('sent-to-email');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('subs-email').value;
+            displayEmail.textContent = email;
+            formContent.style.display = 'none';
+            successBox.style.display = 'block';
+        });
+    </script>
+</body>
+
+</html>

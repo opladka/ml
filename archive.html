@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archive — ML Digest</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .archive-grid {
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 40px;
+        }
+        .filter-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+        .filter-group-title {
+            font-family: var(--mono);
+            font-size: 10px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: var(--ink4);
+            margin-bottom: 12px;
+        }
+        .filter-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .filter-link {
+            font-size: 13px;
+            color: var(--ink3);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.15s;
+            display: block;
+        }
+        .filter-link:hover, .filter-link.active {
+            color: var(--ink);
+            font-weight: 500;
+        }
+        .results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        .archive-item {
+            border-bottom: 1px solid var(--rule2);
+            padding-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .archive-item:last-child {
+            border-bottom: none;
+        }
+        .archive-item-meta {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--ink4);
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .archive-item-title {
+            font-family: var(--serif);
+            font-size: 19px;
+            font-weight: 600;
+            color: var(--ink);
+            text-decoration: none;
+            line-height: 1.35;
+        }
+        .archive-item-title:hover {
+            color: var(--accent);
+        }
+        .archive-item-desc {
+            font-size: 14px;
+            color: var(--ink3);
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a class="active" href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrap">
+        <div class="article-header" style="margin-bottom: 24px;">
+            <div class="hero-kicker">Publications</div>
+            <h1>ML Digest Library</h1>
+            <p class="hero-desc">Search through our full archive of articles, papers, tutorials, and technical explainers.</p>
+        </div>
+
+        <input type="text" id="archive-search" class="search-box" placeholder="Search by keywords, titles, or concepts...">
+
+        <div class="archive-grid">
+            <!-- Sidebar filters -->
+            <div class="filter-sidebar">
+                <div>
+                    <div class="filter-group-title">Category</div>
+                    <ul class="filter-list" id="category-filters">
+                        <li><a class="filter-link active" data-filter="all">All Library</a></li>
+                        <li><a class="filter-link" data-filter="Research">Research</a></li>
+                        <li><a class="filter-link" data-filter="Tutorials">Tutorials</a></li>
+                        <li><a class="filter-link" data-filter="Papers">Papers</a></li>
+                        <li><a class="filter-link" data-filter="Datasets">Datasets</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <div class="filter-group-title">Topics</div>
+                    <ul class="filter-list" id="topic-filters">
+                        <li><a class="filter-link" data-filter="Transformers">Transformers</a></li>
+                        <li><a class="filter-link" data-filter="Diffusion">Diffusion</a></li>
+                        <li><a class="filter-link" data-filter="Reinforcement Learning">Reinforcement Learning</a></li>
+                        <li><a class="filter-link" data-filter="Optimization">Optimization</a></li>
+                        <li><a class="filter-link" data-filter="Hardware">Hardware</a></li>
+                        <li><a class="filter-link" data-filter="Interpretability">Interpretability</a></li>
+                        <li><a class="filter-link" data-filter="Benchmarks">Benchmarks</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="results-list" id="results-container">
+                <!-- Articles are loaded dynamically via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Script Drawer and Filtering Logic -->
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+
+        // --- Articles Database ---
+        const articles = [
+            {
+                title: "Attention Is All You Need: A Deep Dive into Transformer Architecture",
+                url: "article-attention.html",
+                desc: "How a 2017 paper from Google Brain quietly dismantled thirty years of sequential thinking — and why that matters for everything from search to protein folding.",
+                author: "Arjun Rao",
+                date: "June 3, 2026",
+                readTime: "14 min",
+                categories: ["Research", "Papers"],
+                topics: ["Transformers", "NLP"]
+            },
+            {
+                title: "RLHF Demystified: How Language Models Learn Human Preferences",
+                url: "article-rlhf.html",
+                desc: "Reinforcement learning from human feedback sounds complex — but the core loop is surprisingly elegant. We trace it from reward modelling to proximal policy optimisation.",
+                author: "Priya Menon",
+                date: "May 28, 2026",
+                readTime: "9 min",
+                categories: ["Tutorials"],
+                topics: ["Reinforcement Learning", "NLP"]
+            },
+            {
+                title: "The Mathematics of Diffusion Models",
+                url: "article-diffusion.html",
+                desc: "Stable Diffusion, DALL-E, Midjourney — they all share a surprisingly elegant mathematical foundation. We derive the score-matching objective from first principles.",
+                author: "Chen Wei",
+                date: "May 22, 2026",
+                readTime: "11 min",
+                categories: ["Papers"],
+                topics: ["Diffusion", "Computer Vision"]
+            },
+            {
+                title: "Mixture of Experts: Scaling Without the Cost",
+                url: "article-moe.html",
+                desc: "Sparse activation means a trillion-parameter model can cost the same to run as a dense 7B model. We examine how routing decisions are made and what goes wrong.",
+                author: "Sarah K.",
+                date: "May 18, 2026",
+                readTime: "8 min",
+                categories: ["Research"],
+                topics: ["Transformers", "Optimization"]
+            },
+            {
+                title: "Inside the Black Box: What Mechanistic Interpretability Has Found So Far",
+                url: "article-mechanistic.html",
+                desc: "Circuits, superposition, and features — a field-level overview of what we've learned by reverse-engineering transformer weights.",
+                author: "Yuki Tanaka",
+                date: "May 15, 2026",
+                readTime: "18 min",
+                categories: ["Papers"],
+                topics: ["Interpretability"]
+            },
+            {
+                title: "FlashAttention 3: What Changed and Why It Matters",
+                url: "article-flashattention.html",
+                desc: "Sparse flash execution logic that cuts memory reading speeds and expands SRAM matrix throughput. A direct mathematical analysis.",
+                author: "Dev Patel",
+                date: "May 12, 2026",
+                readTime: "7 min",
+                categories: ["Tutorials"],
+                topics: ["Hardware", "Optimization"]
+            },
+            {
+                title: "Why GPUs Aren't Enough: The Case for Custom AI Silicon",
+                url: "article-custom-silicon.html",
+                desc: "TPUs, Groq, Cerebras, Tenstorrent — a detailed look at why matrix multiplication demands purpose-built silicon and what the tradeoffs really are.",
+                author: "Marcus Osei",
+                date: "May 10, 2026",
+                readTime: "16 min",
+                categories: ["Research"],
+                topics: ["Hardware"]
+            },
+            {
+                title: "The Benchmark Problem: Why Leaderboards Don't Tell the Full Story",
+                url: "article-benchmark-problem.html",
+                desc: "MMLU, HumanEval, GPQA — why every major benchmark has already been partially contaminated and what we should measure instead.",
+                author: "Anika Sharma",
+                date: "May 5, 2026",
+                readTime: "13 min",
+                categories: ["Research"],
+                topics: ["Benchmarks"]
+            },
+            {
+                title: "The FineWeb Dataset: How 15 Trillion High-Quality Tokens Were Curated",
+                url: "#",
+                desc: "We look at the data filtering pipeline of FineWeb: from heuristic quality filters to FastText classifiers, deduplication, and toxic text scrubbers.",
+                author: "Arjun Rao",
+                date: "May 2, 2026",
+                readTime: "12 min",
+                categories: ["Datasets", "Research"],
+                topics: ["NLP", "Benchmarks"]
+            },
+            {
+                title: "AdamW, Muon, and Why the Optimizer Still Matters",
+                url: "article-optimizers.html",
+                desc: "The choice of optimiser is one of the most underappreciated variables in training. We trace the history from SGD to the latest muon experiments.",
+                author: "Li Jian",
+                date: "Apr 28, 2026",
+                readTime: "12 min",
+                categories: ["Tutorials"],
+                topics: ["Optimization"]
+            },
+            {
+                title: "Common Crawl Demystified: Pipelines for Curating Clean Pre-training Corpora",
+                url: "#",
+                desc: "Processing petabytes of raw web scrapes is the unsung hero of LLM training. We examine text extraction algorithms, language identification, and minhash deduplication.",
+                author: "Sarah K.",
+                date: "Apr 20, 2026",
+                readTime: "15 min",
+                categories: ["Datasets", "Tutorials"],
+                topics: ["NLP", "Optimization"]
+            },
+            {
+                title: "LAION-5B: Auditing the World's Largest Image-Text Dataset",
+                url: "#",
+                desc: "A detailed inspection of visual pre-training corpora. We discuss clip-score filtering, safety classifiers, and how representation bias crawls into diffusion weights.",
+                author: "Chen Wei",
+                date: "Apr 15, 2026",
+                readTime: "14 min",
+                categories: ["Datasets", "Papers"],
+                topics: ["Computer Vision", "Diffusion"]
+            },
+            {
+                title: "Synthetic Data: Can Models Safely Pre-train on Their Own Outputs?",
+                url: "#",
+                desc: "Exploring model collapse, synthetic dataset contamination, and how architectures can maintain entropy when learning from generated tokens.",
+                author: "Priya Menon",
+                date: "Apr 10, 2026",
+                readTime: "10 min",
+                categories: ["Datasets", "Research"],
+                topics: ["Optimization", "Transformers"]
+            },
+            {
+                title: "MATH and GSM8K: Curation, Contamination, and Mathematical Reasoners",
+                url: "#",
+                desc: "A deep dive into the benchmark datasets used for mathematical logic. We analyze why reasoning models need step-by-step rationales.",
+                author: "Anika Sharma",
+                date: "Mar 28, 2026",
+                readTime: "11 min",
+                categories: ["Datasets", "Papers"],
+                topics: ["Benchmarks", "NLP"]
+            },
+            {
+                title: "Direct Preference Optimization (DPO): Bypassing the Reward Model",
+                url: "#",
+                desc: "Direct Preference Optimization simplifies RLHF by optimizing the policy directly on preference pairs. We trace the mathematical equivalence to standard PPO loss.",
+                author: "Priya Menon",
+                date: "Mar 22, 2026",
+                readTime: "9 min",
+                categories: ["Research", "Papers"],
+                topics: ["Reinforcement Learning", "NLP"]
+            },
+            {
+                title: "RoPE: Rotary Position Embeddings Explained",
+                url: "#",
+                desc: "Why absolute positional encodings fail at long contexts, and how rotating query and key vectors in 2D subspaces preserves relative distance.",
+                author: "Arjun Rao",
+                date: "Mar 15, 2026",
+                readTime: "8 min",
+                categories: ["Tutorials"],
+                topics: ["Transformers", "NLP"]
+            },
+            {
+                title: "BitNet: Training 1.58-bit LLMs from First Principles",
+                url: "#",
+                desc: "Binary and ternary quantizations represent a massive paradigm shift. We explain how models function when weights are restricted to {-1, 0, 1}.",
+                author: "Sarah K.",
+                date: "Mar 8, 2026",
+                readTime: "13 min",
+                categories: ["Research", "Tutorials"],
+                topics: ["Hardware", "Optimization"]
+            },
+            {
+                title: "Speculative Decoding: 2x Acceleration in LLM Inference",
+                url: "#",
+                desc: "Speeding up autoregressive sampling by running a small draft model and verifying multiple tokens in a single forward pass of the larger target model.",
+                author: "Dev Patel",
+                date: "Feb 28, 2026",
+                readTime: "7 min",
+                categories: ["Tutorials"],
+                topics: ["Optimization", "Hardware"]
+            },
+            {
+                title: "KAN: Kolmogorov-Arnold Networks vs. MLPs",
+                url: "#",
+                desc: "Placing learnable activation functions on network edges rather than nodes. We review the approximation theory and practical training limits of KANs.",
+                author: "Yuki Tanaka",
+                date: "Feb 20, 2026",
+                readTime: "16 min",
+                categories: ["Papers", "Research"],
+                topics: ["Optimization", "Interpretability"]
+            },
+            {
+                title: "Ring Attention: Scaling Context to Millions of Tokens",
+                url: "#",
+                desc: "Distributing the sequence dimension across a ring of GPU accelerators using block-wise attention computation and async collective communications.",
+                author: "Dev Patel",
+                date: "Feb 12, 2026",
+                readTime: "12 min",
+                categories: ["Papers", "Tutorials"],
+                topics: ["Hardware", "Optimization"]
+            }
+        ];
+
+        let activeCategory = 'all';
+        let activeTopic = null;
+        let searchQuery = '';
+
+        const resultsContainer = document.getElementById('results-container');
+        const searchInput = document.getElementById('archive-search');
+
+        function renderArticles() {
+            resultsContainer.innerHTML = '';
+            
+            const filtered = articles.filter(art => {
+                // Category match
+                if (activeCategory !== 'all' && !art.categories.includes(activeCategory)) return false;
+                
+                // Topic match
+                if (activeTopic && !art.topics.includes(activeTopic)) return false;
+                
+                // Search match
+                if (searchQuery) {
+                    const q = searchQuery.toLowerCase();
+                    const titleMatch = art.title.toLowerCase().includes(q);
+                    const descMatch = art.desc.toLowerCase().includes(q);
+                    const authorMatch = art.author.toLowerCase().includes(q);
+                    const topicMatch = art.topics.some(t => t.toLowerCase().includes(q));
+                    if (!titleMatch && !descMatch && !authorMatch && !topicMatch) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div style="padding: 40px 0; text-align: center; color: var(--ink4); font-size: 15px;">
+                        No articles match the selected filters or search parameters.
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(art => {
+                const item = document.createElement('div');
+                item.className = 'archive-item';
+                
+                const metaText = `${art.author} · ${art.date} · ${art.readTime}`;
+                const categoryBadge = art.categories.map(c => `<span style="border-bottom: 1px solid var(--rule); padding: 1px 4px; border-radius: 2px;">${c}</span>`).join(' ');
+                
+                item.innerHTML = `
+                    <div class="archive-item-meta">
+                        <span>${metaText}</span>
+                        <div style="flex-grow: 1;"></div>
+                        <div>${categoryBadge}</div>
+                    </div>
+                    <a class="archive-item-title" href="${art.url}">${art.title}</a>
+                    <p class="archive-item-desc">${art.desc}</p>
+                `;
+                resultsContainer.appendChild(item);
+            });
+        }
+
+        // --- Filter Clicks ---
+        document.querySelectorAll('#category-filters .filter-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('#category-filters .filter-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                activeCategory = link.getAttribute('data-filter');
+                renderArticles();
+            });
+        });
+
+        document.querySelectorAll('#topic-filters .filter-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const wasActive = link.classList.contains('active');
+                document.querySelectorAll('#topic-filters .filter-link').forEach(l => l.classList.remove('active'));
+                
+                if (wasActive) {
+                    activeTopic = null;
+                } else {
+                    link.classList.add('active');
+                    activeTopic = link.getAttribute('data-filter');
+                }
+                renderArticles();
+            });
+        });
+
+        // --- Search Input ---
+        searchInput.addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            renderArticles();
+        });
+
+        // Check for URL query params on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const urlTag = params.get('tag');
+            if (urlTag) {
+                // Search category filters first
+                const matchedCategory = Array.from(document.querySelectorAll('#category-filters .filter-link')).find(l => l.getAttribute('data-filter').toLowerCase() === urlTag.toLowerCase());
+                if (matchedCategory) {
+                    document.querySelectorAll('#category-filters .filter-link').forEach(l => l.classList.remove('active'));
+                    matchedCategory.classList.add('active');
+                    activeCategory = matchedCategory.getAttribute('data-filter');
+                } else {
+                    // Look in topic filters
+                    const matchedTopic = Array.from(document.querySelectorAll('#topic-filters .filter-link')).find(l => l.getAttribute('data-filter').toLowerCase() === urlTag.toLowerCase());
+                    if (matchedTopic) {
+                        matchedTopic.classList.add('active');
+                        activeTopic = matchedTopic.getAttribute('data-filter');
+                    }
+                }
+            }
+            renderArticles();
+        });
+    </script>
+</body>
+
+</html>

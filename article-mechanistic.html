@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inside the Black Box — ML Digest</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .circuit-widget-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .selector-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .feature-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--rule);
+            background: var(--bg);
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .feature-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .circuit-canvas-box {
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .network-svg {
+            max-width: 480px;
+            width: 100%;
+            height: auto;
+        }
+        .node {
+            transition: fill 0.3s, stroke 0.3s;
+            cursor: pointer;
+        }
+        .node:hover {
+            stroke-width: 1.5px;
+        }
+        .node-label {
+            font-family: var(--mono);
+            font-size: 8px;
+            text-anchor: middle;
+            pointer-events: none;
+            user-select: none;
+        }
+        .synapse {
+            transition: stroke 0.3s, stroke-width 0.3s, opacity 0.3s;
+        }
+        .details-panel {
+            background: var(--bg);
+            padding: 12px;
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--ink3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="article-container">
+        <div class="article-header">
+            <div class="hero-kicker">Papers · May 2026</div>
+            <h1>Inside the Black Box: What Mechanistic Interpretability Has Found So Far</h1>
+            <div class="article-header-meta">
+                <div class="hero-author-chip">
+                    <div class="hac-avatar">YT</div>
+                    <span>Yuki Tanaka</span>
+                </div>
+                <div class="hmeta-dot"></div>
+                <span>May 15, 2026</span>
+                <div class="hmeta-dot"></div>
+                <span>18 min read</span>
+                <div class="hmeta-dot"></div>
+                <span style="border: 1px solid var(--rule); padding: 1px 6px; border-radius: 3px;">Papers</span>
+            </div>
+        </div>
+
+        <div class="article-body">
+            <p>
+                Neural networks are commonly criticized as black boxes: systems that translate inputs into outputs through billions of parameters, yet yield no clarity on their internal decision-making rules. **Mechanistic Interpretability** seeks to change this by reverse-engineering network weights into human-understandable algorithms.
+            </p>
+            <p>
+                Instead of inspecting entire networks, researchers dissect components into sub-circuits. These circuits consist of specific neurons and attention heads that collaborate to perform discrete sub-tasks, like detecting uppercase letters or tracking indirect objects.
+            </p>
+
+            <h2>Neural Circuits and Superposition</h2>
+            <p>
+                A core challenge in mechanistic interpretability is **superposition**: the tendency of neural networks to represent more features than they have dimensions by mapping multiple concepts to linear combinations of the same neuron weights.
+            </p>
+            <p>
+                When features are sparse, a model can compress them into a lower-dimensional space. By identifying these active coordinates, researchers can reconstruct **circuits**: subgraphs of nodes that govern specific features.
+            </p>
+
+            <!-- Interactive Widget -->
+            <div class="interactive-widget">
+                <div class="widget-title">Interactive Neural Circuit Viewer</div>
+                <p style="font-size: 13px; color: var(--ink3); margin-bottom: 16px;">
+                    Select a semantic feature. Watch how the network lights up the active circuit path (neurons and weights) that computes the selected concept. Click on nodes to see detail metrics.
+                </p>
+
+                <div class="circuit-widget-wrap">
+                    <div class="selector-row">
+                        <button class="feature-btn active" id="feat-uppercase">Uppercase Detection</button>
+                        <button class="feature-btn" id="feat-negation">Negation Checking</button>
+                        <button class="feature-btn" id="feat-plural">Plural Matching</button>
+                    </div>
+
+                    <div class="circuit-canvas-box">
+                        <svg class="network-svg" viewBox="0 0 320 180" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Connections (Synapses) -->
+                            <!-- Column 1 to Column 2 -->
+                            <line class="synapse" id="syn-1-1" x1="40" y1="45" x2="160" y2="30" stroke="#ccc" stroke-width="0.8"/>
+                            <line class="synapse" id="syn-1-2" x1="40" y1="45" x2="160" y2="90" stroke="#ccc" stroke-width="0.8"/>
+                            <line class="synapse" id="syn-1-3" x1="40" y1="45" x2="160" y2="150" stroke="#ccc" stroke-width="0.8"/>
+
+                            <line class="synapse" id="syn-2-1" x1="40" y1="90" x2="160" y2="30" stroke="#ccc" stroke-width="0.8"/>
+                            <line class="synapse" id="syn-2-2" x1="40" y1="90" x2="160" y2="90" stroke="#ccc" stroke-width="0.8"/>
+                            <line class="synapse" id="syn-2-3" x1="40" y1="90" x2="160" y2="150" stroke="#ccc" stroke-width="0.8"/>
+
+                            <line class="synapse" id="syn-3-1" x1="40" y1="135" x2="160" y2="30" stroke="#ccc" stroke-width="0.8"/>
+                            <line class="synapse" id="syn-3-2" x1="40" y1="135" x2="160" y2="90" stroke="#ccc" stroke-width="0.8"/>
+                            <line class="synapse" id="syn-3-3" x1="40" y1="135" x2="160" y2="150" stroke="#ccc" stroke-width="0.8"/>
+
+                            <!-- Column 2 to Output -->
+                            <line class="synapse" id="syn-out-1" x1="160" y1="30" x2="280" y2="90" stroke="#ccc" stroke-width="0.8"/>
+                            <line class="synapse" id="syn-out-2" x1="160" y1="90" x2="280" y2="90" stroke="#ccc" stroke-width="0.8"/>
+                            <line class="synapse" id="syn-out-3" x1="160" y1="150" x2="280" y2="90" stroke="#ccc" stroke-width="0.8"/>
+
+                            <!-- Neurons (Nodes) -->
+                            <!-- Column 1 (Inputs) -->
+                            <circle class="node" id="node-in1" cx="40" cy="45" r="14" fill="#f1ece1" stroke="#ccc" stroke-width="1"/>
+                            <text class="node-label" x="40" y="48">Input 1</text>
+
+                            <circle class="node" id="node-in2" cx="40" cy="90" r="14" fill="#f1ece1" stroke="#ccc" stroke-width="1"/>
+                            <text class="node-label" x="40" y="93">Input 2</text>
+
+                            <circle class="node" id="node-in3" cx="40" cy="135" r="14" fill="#f1ece1" stroke="#ccc" stroke-width="1"/>
+                            <text class="node-label" x="40" y="138">Input 3</text>
+
+                            <!-- Column 2 (Hidden Layer) -->
+                            <circle class="node" id="node-h1" cx="160" cy="30" r="14" fill="#f1ece1" stroke="#ccc" stroke-width="1"/>
+                            <text class="node-label" x="160" y="33">Neuron A</text>
+
+                            <circle class="node" id="node-h2" cx="160" cy="90" r="14" fill="#f1ece1" stroke="#ccc" stroke-width="1"/>
+                            <text class="node-label" x="160" y="93">Neuron B</text>
+
+                            <circle class="node" id="node-h3" cx="160" cy="150" r="14" fill="#f1ece1" stroke="#ccc" stroke-width="1"/>
+                            <text class="node-label" x="160" y="153">Neuron C</text>
+
+                            <!-- Column 3 (Output) -->
+                            <circle class="node" id="node-out" cx="280" cy="90" r="14" fill="#f1ece1" stroke="#ccc" stroke-width="1"/>
+                            <text class="node-label" x="280" y="93">Output</text>
+                        </svg>
+                    </div>
+
+                    <div class="details-panel" id="details-box">
+                        Select a feature above or click on nodes to inspect mathematical activations.
+                    </div>
+                </div>
+            </div>
+
+            <h2>Mechanistic De-obfuscation</h2>
+            <p>
+                By mapping these circuits, researchers have found that models learn discrete mathematical structures. For instance, in attention layers, models form **induction heads**: two-head circuits that search for repetitions of previous token patterns. These circuits represent the core mechanism behind in-context learning.
+            </p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Circuit Viewer Script -->
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+
+        // --- Circuit Viewer Logic ---
+        const btnUpper = document.getElementById('feat-uppercase');
+        const btnNeg = document.getElementById('feat-negation');
+        const btnPlural = document.getElementById('feat-plural');
+        const detailsBox = document.getElementById('details-box');
+
+        const activePaths = {
+            uppercase: {
+                nodes: ['node-in1', 'node-h2', 'node-out'],
+                synapses: ['syn-1-2', 'syn-out-2'],
+                text: "Circuit: Uppercase Detection. Input 1 (Character casing scanner) activates Neuron B (Uppercase discriminator, weight=1.45) routing directly to output features."
+            },
+            negation: {
+                nodes: ['node-in3', 'node-h1', 'node-out'],
+                synapses: ['syn-3-1', 'syn-out-1'],
+                text: "Circuit: Negation Checking. Input 3 (Lexical negative token reader) activates Neuron A (Negation weight accumulator, weight=-1.8) which flips Output bias parameters."
+            },
+            plural: {
+                nodes: ['node-in2', 'node-h3', 'node-out'],
+                synapses: ['syn-2-3', 'syn-out-3'],
+                text: "Circuit: Plural Matching. Input 2 (Noun suffix matching filter) activates Neuron C (Plural semantic mapping collector, weight=1.12) routing directly to output predictions."
+            }
+        };
+
+        function activateCircuit(key) {
+            // Reset colors
+            document.querySelectorAll('.node').forEach(n => {
+                n.setAttribute('fill', '#f1ece1');
+                n.setAttribute('stroke', '#ccc');
+            });
+            document.querySelectorAll('.synapse').forEach(s => {
+                s.setAttribute('stroke', '#ccc');
+                s.setAttribute('stroke-width', '0.8');
+                s.setAttribute('opacity', '0.4');
+            });
+
+            const path = activePaths[key];
+            
+            // Highlight nodes
+            path.nodes.forEach(nodeId => {
+                const node = document.getElementById(nodeId);
+                node.setAttribute('fill', 'var(--accent-light)');
+                node.setAttribute('stroke', 'var(--accent)');
+            });
+
+            // Highlight synapses
+            path.synapses.forEach(synId => {
+                const syn = document.getElementById(synId);
+                syn.setAttribute('stroke', 'var(--accent)');
+                syn.setAttribute('stroke-width', '2.5');
+                syn.setAttribute('opacity', '1');
+            });
+
+            detailsBox.textContent = path.text;
+        }
+
+        btnUpper.addEventListener('click', () => {
+            document.querySelectorAll('.feature-btn').forEach(b => b.classList.remove('active'));
+            btnUpper.classList.add('active');
+            activateCircuit('uppercase');
+        });
+
+        btnNeg.addEventListener('click', () => {
+            document.querySelectorAll('.feature-btn').forEach(b => b.classList.remove('active'));
+            btnNeg.classList.add('active');
+            activateCircuit('negation');
+        });
+
+        btnPlural.addEventListener('click', () => {
+            document.querySelectorAll('.feature-btn').forEach(b => b.classList.remove('active'));
+            btnPlural.classList.add('active');
+            activateCircuit('plural');
+        });
+
+        // Click on individual nodes
+        document.querySelectorAll('.node').forEach(node => {
+            node.addEventListener('click', () => {
+                const id = node.getAttribute('id');
+                detailsBox.textContent = `Neuron ID: ${id} | Active Activation: (ReLU output: ${Math.random().toFixed(2)}) | Bias weight: ${ (Math.random()*2 - 1).toFixed(3) }`;
+            });
+        });
+
+        // Initialize circuit
+        window.addEventListener('DOMContentLoaded', () => activateCircuit('uppercase'));
+    </script>
+</body>
+
+</html>

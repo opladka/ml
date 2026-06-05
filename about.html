@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About — ML Digest</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a class="active" href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a class="active" href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-wrap">
+        <div class="article-header">
+            <div class="hero-kicker">About ML Digest</div>
+            <h1>Depth Over Hype</h1>
+            <p class="hero-desc">We write independent, mathematical, and algorithmic walkthroughs of breakthroughs in AI and Machine Learning.</p>
+        </div>
+
+        <div class="about-grid">
+            <div class="article-body">
+                <h2>Our Mission</h2>
+                <p>
+                    ML Digest was founded in 2026 to bridge the gap between superficial tech journalism and dense academic literature. As language models, diffusion systems, and specialized accelerators evolve at speeds unprecedented in computer science, engineers need clear, code-first explainers that don't skimp on the math.
+                </p>
+                <p>
+                    Every article we publish is peer-reviewed by our small team of practitioners, verified with executable PyTorch/JAX snippets, and visualised using interactive components. We believe that understanding transformer blocks, score-matching objectives, and routing functions shouldn't require decyphering jargon.
+                </p>
+
+                <h2>Editorial Standards</h2>
+                <ul>
+                    <li><strong>No Sponsored Content:</strong> We do not publish promotional material for foundation model providers or chip hardware startups.</li>
+                    <li><strong>Visual Explanations:</strong> Every conceptual model must include an interactive widget or vector illustration representing the mechanics.</li>
+                    <li><strong>Reproducible Code:</strong> Code segments represent complete blocks that can be pasted directly into training pipelines.</li>
+                </ul>
+
+                <h2 id="team">Editorial Board</h2>
+                <div class="about-team">
+                    <div class="team-member">
+                        <div class="team-avatar">AR</div>
+                        <div class="team-info">
+                            <h3>Arjun Rao</h3>
+                            <p>Arjun leads our Transformer Architecture coverage. Formerly a researcher at Google Brain, he focuses on sequence modeling efficiency, attention variants, and dense-to-sparse model architectures.</p>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <div class="team-avatar">PM</div>
+                        <div class="team-info">
+                            <h3>Priya Menon</h3>
+                            <p>Priya covers Reinforcement Learning and Human Preference alignment. She spends her time tracking reward model hacks, proximal policy optimization instabilities, and steerability benchmarks.</p>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <div class="team-avatar">CW</div>
+                        <div class="team-info">
+                            <h3>Chen Wei</h3>
+                            <p>Chen runs the Generative Models beat. With a background in mathematical physics, he is passionate about clarifying probability flow ODEs, continuous-time diffusion math, and flow matching.</p>
+                        </div>
+                    </div>
+                    <div class="team-member">
+                        <div class="team-avatar">SK</div>
+                        <div class="team-info">
+                            <h3>Sarah K.</h3>
+                            <p>Sarah is our core Hardware and Systems Optimization analyst. She reverse-engineers training frameworks, matrix kernels, SRAM-to-HBM bandwidths, and custom TPU/ASIC execution pipelines.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div>
+                <div class="section-label"><span>Quick Stats</span></div>
+                <div style="font-family: var(--mono); font-size: 13px; display: flex; flex-direction: column; gap: 12px; background: var(--bg2); padding: 18px; border: 1px solid var(--rule); border-radius: 6px;">
+                    <div><strong>Frequency:</strong> Weekly</div>
+                    <div><strong>Audience:</strong> 45,000+ engineers</div>
+                    <div><strong>Focus:</strong> Architectures & Math</div>
+                    <div><strong>Format:</strong> Ad-free & Open</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Navigation Drawer Script -->
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+
+</html>

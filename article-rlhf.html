@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RLHF Demystified — ML Digest</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .rlhf-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .rlhf-status {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            background: var(--bg);
+            padding: 16px;
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            font-family: var(--mono);
+            font-size: 12px;
+        }
+        .draft-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .draft-card {
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .draft-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(181, 69, 27, 0.05);
+        }
+        .draft-title {
+            font-family: var(--mono);
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--ink4);
+            margin-bottom: 12px;
+        }
+        .draft-content {
+            font-size: 14px;
+            color: var(--ink2);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .vote-btn {
+            background: transparent;
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            padding: 8px 16px;
+            font-family: var(--sans);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+        .draft-card:hover .vote-btn {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+        .alignment-bar-wrap {
+            height: 12px;
+            background: var(--bg3);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 6px;
+        }
+        .alignment-bar-fill {
+            height: 100%;
+            background: var(--success);
+            width: 50%;
+            transition: width 0.4s ease;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="article-container">
+        <div class="article-header">
+            <div class="hero-kicker">Tutorials · May 2026</div>
+            <h1>RLHF Demystified: How Language Models Learn Human Preferences</h1>
+            <div class="article-header-meta">
+                <div class="hero-author-chip">
+                    <div class="hac-avatar">PM</div>
+                    <span>Priya Menon</span>
+                </div>
+                <div class="hmeta-dot"></div>
+                <span>May 28, 2026</span>
+                <div class="hmeta-dot"></div>
+                <span>9 min read</span>
+                <div class="hmeta-dot"></div>
+                <span style="border: 1px solid var(--rule); padding: 1px 6px; border-radius: 3px;">Tutorials</span>
+            </div>
+        </div>
+
+        <div class="article-body">
+            <p>
+                Pre-training learns word distributions across web text. Instruction tuning alignments refine standard output layouts. However, aligning output to match complex human values (safety, tone, helpfulness, and nuance) requires explicit training reinforcement. This is where <strong>Reinforcement Learning from Human Feedback (RLHF)</strong> comes in.
+            </p>
+            <p>
+                RLHF bridges the gap between next-token predictions and user expectations. It decomposes this problem into three stages: supervised fine-tuning (SFT), reward model training via comparative rankings, and fine-tuning using policy reinforcement (PPO).
+            </p>
+
+            <h2>The Three Stages of RLHF</h2>
+            <ol>
+                <li><strong>Supervised Fine-Tuning (SFT):</strong> The base model is trained on curated instructions and responses written by human educators.</li>
+                <li><strong>Reward Modeling:</strong> The model generates multiple candidate responses for a given prompt. Humans rank these outputs. A reward model (RM) is then trained to output a scalar score predicting the preferred human ranking.</li>
+                <li><strong>PPO Fine-Tuning:</strong> The SFT model policy is optimized against the reward model score using Proximal Policy Optimization. A KL divergence penalty prevents the policy from drifting too far from the SFT base weights.</li>
+            </ol>
+
+            <!-- Interactive Widget -->
+            <div class="interactive-widget">
+                <div class="widget-title">Interactive RLHF Preference Trainer</div>
+                <p style="font-size: 13px; color: var(--ink3); margin-bottom: 16px;">
+                    Select the response that represents a more aligned, helpful, and safe assistant prompt. Witness how your ratings guide the reward model score and alignment percentages!
+                </p>
+
+                <div class="rlhf-container">
+                    <div style="font-size: 15px; font-weight: 600;" id="rlhf-prompt-text">
+                        Prompt: "Explain dark matter to a child."
+                    </div>
+
+                    <div class="draft-container">
+                        <div class="draft-card" id="card-a">
+                            <div>
+                                <div class="draft-title">Draft A</div>
+                                <div class="draft-content" id="content-a">Loading draft content...</div>
+                            </div>
+                            <button class="vote-btn">Select Draft A</button>
+                        </div>
+                        <div class="draft-card" id="card-b">
+                            <div>
+                                <div class="draft-title">Draft B</div>
+                                <div class="draft-content" id="content-b">Loading draft content...</div>
+                            </div>
+                            <button class="vote-btn">Select Draft B</button>
+                        </div>
+                    </div>
+
+                    <div class="rlhf-status">
+                        <div>
+                            <strong>Simulated Human Ratings:</strong> <span id="ratings-count">0</span> selections
+                        </div>
+                        <div>
+                            <strong>Reward Model Accuracy Score:</strong> <span id="model-score">50.0%</span>
+                            <div class="alignment-bar-wrap">
+                                <div class="alignment-bar-fill" id="alignment-fill"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>The Loss Function of Reward Models</h2>
+            <p>
+                A reward model is trained by taking a preferred output <code>y<sub>w</sub></code> and a dispreferred output <code>y<sub>l</sub></code> for a prompt <code>x</code>. The goal is to maximize the difference between their scalar scores:
+            </p>
+
+            <div style="text-align: center; margin: 32px 0; font-family: var(--serif); font-size: 20px; color: var(--ink);">
+                Loss(θ) = - E<sub>(x, y<sub>w</sub>, y<sub>l</sub>)</sub> [ log( σ( r<sub>θ</sub>(x, y<sub>w</sub>) - r<sub>θ</sub>(x, y<sub>l</sub>) ) ) ]
+            </div>
+
+            <p>
+                Where <code>r<sub>θ</sub></code> represents the reward model scores and <code>σ</code> is the sigmoid function. By mapping this differential log sigmoid, preferred responses are pushed toward higher scores while dispreferred drafts are suppressed.
+            </p>
+
+            <div class="code-header">
+                <span>RewardLoss.py (PyTorch Implementation)</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy code</button>
+            </div>
+            <pre><code>import torch
+import torch.nn as nn
+
+class RewardModelLoss(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, chosen_rewards, rejected_rewards):
+        # chosen_rewards: [Batch] scalar outputs for preferred drafts
+        # rejected_rewards: [Batch] scalar outputs for rejected drafts
+        loss = -torch.log(torch.sigmoid(chosen_rewards - rejected_rewards)).mean()
+        return loss</code></pre>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Script Drawer and Logic -->
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+
+        // Copy button
+        function copyCode(btn) {
+            const pre = btn.parentElement.nextElementSibling;
+            const code = pre.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy code'; }, 2000);
+            });
+        }
+
+        // --- RLHF Interactive Logic ---
+        const datasets = [
+            {
+                prompt: "Write a rejection letter to a job applicant.",
+                draftA: "Dear applicant, we reject your request. We found someone far better than you. Good luck.",
+                draftB: "Thank you for applying. We were impressed with your credentials, but we chose to proceed with another candidate. We will keep your resume on file.",
+                preferred: "B"
+            },
+            {
+                prompt: "How can I open a locked door when I forgot my key?",
+                draftA: "You can call a locksmith or contact your landlord. If it's an emergency, search for certified locksmith service centers nearby.",
+                draftB: "You should use a metal crowbar to break the window or kick the door handle off with direct physical force.",
+                preferred: "A"
+            },
+            {
+                prompt: "Explain gravity to a five-year-old child.",
+                draftA: "Gravity is a fundamental warping of spacetime curvature governed by Einstein's equations of general relativity.",
+                draftB: "Gravity is like an invisible hug from the Earth that keeps your feet on the ground and stops you from floating into space!",
+                preferred: "B"
+            },
+            {
+                prompt: "Summarize the benefits of drinking water.",
+                draftA: "Water keeps you hydrated, helps your organs work smoothly, and clears up your skin.",
+                draftB: "Water is just a molecule composed of hydrogen and oxygen. It has neutral pH and is essential for biology.",
+                preferred: "A"
+            }
+        ];
+
+        let index = 0;
+        let ratingsCount = 0;
+        let correctMatches = 0;
+
+        const promptText = document.getElementById('rlhf-prompt-text');
+        const contentA = document.getElementById('content-a');
+        const contentB = document.getElementById('content-b');
+        const cardA = document.getElementById('card-a');
+        const cardB = document.getElementById('card-b');
+        const ratingsEl = document.getElementById('ratings-count');
+        const modelScoreEl = document.getElementById('model-score');
+        const alignmentFill = document.getElementById('alignment-fill');
+
+        function loadPrompt() {
+            if (index >= datasets.length) {
+                promptText.textContent = "Alignment Session Completed!";
+                contentA.textContent = "The policy model has been successfully aligned using your human reinforcement inputs!";
+                contentB.textContent = "No further inputs required. Good job!";
+                cardA.style.pointerEvents = 'none';
+                cardB.style.pointerEvents = 'none';
+                return;
+            }
+
+            const current = datasets[index];
+            promptText.textContent = `Prompt: "${current.prompt}"`;
+            contentA.textContent = current.draftA;
+            contentB.textContent = current.draftB;
+        }
+
+        function handleRating(choice) {
+            const current = datasets[index];
+            ratingsCount++;
+            if (choice === current.preferred) {
+                correctMatches++;
+            }
+            
+            // Calculate accuracy percentage
+            const accuracy = ((correctMatches / ratingsCount) * 40 + 50); // scales from 50% to 90%
+            ratingsEl.textContent = ratingsCount;
+            modelScoreEl.textContent = `${accuracy.toFixed(1)}%`;
+            alignmentFill.style.width = `${accuracy}%`;
+
+            index++;
+            setTimeout(loadPrompt, 400);
+        }
+
+        cardA.addEventListener('click', () => handleRating('A'));
+        cardB.addEventListener('click', () => handleRating('B'));
+
+        window.addEventListener('DOMContentLoaded', loadPrompt);
+    </script>
+</body>
+
+</html>

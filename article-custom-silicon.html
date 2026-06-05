@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom AI Silicon — ML Digest</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .systolic-widget-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .systolic-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            max-width: 240px;
+            width: 100%;
+        }
+        .alu-cell {
+            aspect-ratio: 1;
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--mono);
+            font-size: 11px;
+            position: relative;
+            transition: all 0.3s;
+        }
+        .alu-cell.active {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+        .flow-data-label {
+            font-size: 8px;
+            color: var(--ink4);
+        }
+        .step-info-panel {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            padding: 16px;
+            font-family: var(--mono);
+            font-size: 12px;
+            color: var(--ink3);
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="article-container">
+        <div class="article-header">
+            <div class="hero-kicker">Research · May 2026</div>
+            <h1>Why GPUs Aren't Enough: The Case for Custom AI Silicon</h1>
+            <div class="article-header-meta">
+                <div class="hero-author-chip">
+                    <div class="hac-avatar">MO</div>
+                    <span>Marcus Osei</span>
+                </div>
+                <div class="hmeta-dot"></div>
+                <span>May 10, 2026</span>
+                <div class="hmeta-dot"></div>
+                <span>16 min read</span>
+                <div class="hmeta-dot"></div>
+                <span style="border: 1px solid var(--rule); padding: 1px 6px; border-radius: 3px;">Research</span>
+            </div>
+        </div>
+
+        <div class="article-body">
+            <p>
+                GPUs revolutionized AI because they could process thousands of independent mathematical threads in parallel. However, at their core, GPUs remain general-purpose vector processors. They require loading instructions, decoding vectors, and updating registers for every single operation.
+            </p>
+            <p>
+                Modern deep learning workloads are dominated by a single operation: **Matrix Multiplication**. Custom AI silicon, such as Google's Tensor Processing Unit (TPU) and specialized chips from Groq and Cerebras, bypass instruction fetch overhead by using hardware-wired math engines.
+            </p>
+
+            <h2>The Systolic Array Architecture</h2>
+            <p>
+                Unlike standard vector units that write outputs back to registers at each step, a **Systolic Array** passes data directly through a grid of Arithmetic Logic Units (ALUs) without storing intermediate results.
+            </p>
+            <p>
+                Data flows through the array like blood pulsing through a vascular system. Input matrices stream from left to right, while weight matrices stream from top to bottom. The results accumulate at each grid node and flow out of the boundaries, saving register bandwidth and power.
+            </p>
+
+            <!-- Interactive Widget -->
+            <div class="interactive-widget">
+                <div class="widget-title">Interactive Systolic Array Simulator</div>
+                <p style="font-size: 13px; color: var(--ink3); margin-bottom: 16px;">
+                    Trigger systolic compute steps. Watch input values flow left-to-right and weights flow top-to-bottom, accumulating matrix dot products at each ALU node on-the-fly.
+                </p>
+
+                <div class="systolic-widget-box">
+                    <div class="systolic-grid">
+                        <div class="alu-cell" id="alu-0-0">
+                            <span class="flow-data-label">ALU [0,0]</span>
+                            <strong id="val-0-0">0</strong>
+                        </div>
+                        <div class="alu-cell" id="alu-0-1">
+                            <span class="flow-data-label">ALU [0,1]</span>
+                            <strong id="val-0-1">0</strong>
+                        </div>
+                        <div class="alu-cell" id="alu-0-2">
+                            <span class="flow-data-label">ALU [0,2]</span>
+                            <strong id="val-0-2">0</strong>
+                        </div>
+                        <div class="alu-cell" id="alu-1-0">
+                            <span class="flow-data-label">ALU [1,0]</span>
+                            <strong id="val-1-0">0</strong>
+                        </div>
+                        <div class="alu-cell" id="alu-1-1">
+                            <span class="flow-data-label">ALU [1,1]</span>
+                            <strong id="val-1-1">0</strong>
+                        </div>
+                        <div class="alu-cell" id="alu-1-2">
+                            <span class="flow-data-label">ALU [1,2]</span>
+                            <strong id="val-1-2">0</strong>
+                        </div>
+                        <div class="alu-cell" id="alu-2-0">
+                            <span class="flow-data-label">ALU [2,0]</span>
+                            <strong id="val-2-0">0</strong>
+                        </div>
+                        <div class="alu-cell" id="alu-2-1">
+                            <span class="flow-data-label">ALU [2,1]</span>
+                            <strong id="val-2-1">0</strong>
+                        </div>
+                        <div class="alu-cell" id="alu-2-2">
+                            <span class="flow-data-label">ALU [2,2]</span>
+                            <strong id="val-2-2">0</strong>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button class="nl-btn" id="btn-systolic-step">Compute Step</button>
+                        <button class="vote-btn" id="btn-systolic-reset">Reset</button>
+                    </div>
+
+                    <div class="step-info-panel" id="systolic-info">
+                        Press "Compute Step" to stream matrices and initialize systolic accumulation.
+                    </div>
+                </div>
+            </div>
+
+            <h2>Why Matrix Engines Win</h2>
+            <p>
+                By hardwiring ALUs in a grid, systolic arrays eliminate the energy overhead of repeatedly reading from registers and instruction decoders. A single instruction launches a matrix multiplication that executes over thousands of cycles, achieving orders of magnitude improvement in throughput per watt.
+            </p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Systolic Logic Script -->
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+
+        // --- Systolic Simulation ---
+        const btnStep = document.getElementById('btn-systolic-step');
+        const btnReset = document.getElementById('btn-systolic-reset');
+        const infoPanel = document.getElementById('systolic-info');
+
+        let step = 0;
+        // Mock matrix multiplication
+        // Input: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        // Weights: [[1, 0, 1], [0, 1, 0], [1, 1, 1]]
+        // Accumulator states per node
+        const nodeValues = {
+            '0-0': [0, 1, 1, 1, 1, 1],
+            '0-1': [0, 0, 2, 2, 2, 2],
+            '0-2': [0, 0, 0, 4, 4, 4],
+            '1-0': [0, 0, 4, 4, 4, 4],
+            '1-1': [0, 0, 0, 9, 9, 9],
+            '1-2': [0, 0, 0, 0, 15, 15],
+            '2-0': [0, 0, 0, 7, 7, 7],
+            '2-1': [0, 0, 0, 0, 16, 16],
+            '2-2': [0, 0, 0, 0, 0, 24]
+        };
+
+        function updateGrid() {
+            document.querySelectorAll('.alu-cell').forEach(cell => {
+                const id = cell.getAttribute('id').replace('alu-', '');
+                const valArr = nodeValues[id];
+                const activeVal = valArr[Math.min(step, valArr.length - 1)];
+                const valSpan = cell.querySelector('strong');
+                
+                valSpan.textContent = activeVal;
+                if (step > 0 && valArr[step] !== valArr[step-1]) {
+                    cell.classList.add('active');
+                } else {
+                    cell.classList.remove('active');
+                }
+            });
+        }
+
+        btnStep.addEventListener('click', () => {
+            step++;
+            if (step > 5) step = 5;
+            infoPanel.textContent = `Systolic step ${step}/5. Values are shifting. Accumulating inputs * weights matrix multiplications concurrently.`;
+            updateGrid();
+        });
+
+        btnReset.addEventListener('click', () => {
+            step = 0;
+            infoPanel.textContent = `Array state reset. Ready for computation.`;
+            updateGrid();
+        });
+    </script>
+</body>
+
+</html>

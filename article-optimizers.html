@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AdamW, Muon, and Optimizers — ML Digest</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .opt-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        .landscape-wrap {
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            overflow: hidden;
+            background: #fff;
+            width: 320px;
+            height: 240px;
+            position: relative;
+        }
+        .landscape-canvas {
+            display: block;
+            width: 320px;
+            height: 240px;
+        }
+        .opt-legend {
+            display: flex;
+            gap: 16px;
+            font-family: var(--mono);
+            font-size: 11px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .dot-sgd { width: 8px; height: 8px; background: #9a9a92; border-radius: 50%; }
+        .dot-adam { width: 8px; height: 8px; background: var(--accent2); border-radius: 50%; }
+        .dot-muon { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="article-container">
+        <div class="article-header">
+            <div class="hero-kicker">Tutorials · April 2026</div>
+            <h1>AdamW, Muon, and Why the Optimizer Still Matters</h1>
+            <div class="article-header-meta">
+                <div class="hero-author-chip">
+                    <div class="hac-avatar">LJ</div>
+                    <span>Li Jian</span>
+                </div>
+                <div class="hmeta-dot"></div>
+                <span>April 28, 2026</span>
+                <div class="hmeta-dot"></div>
+                <span>12 min read</span>
+                <div class="hmeta-dot"></div>
+                <span style="border: 1px solid var(--rule); padding: 1px 6px; border-radius: 3px;">Tutorials</span>
+            </div>
+        </div>
+
+        <div class="article-body">
+            <p>
+                In deep learning, data sets and scaling parameters receive massive attention. Yet, the algorithm guiding weights down the high-dimensional loss surface—the **Optimizer**—remains one of the most critical variables in training velocity.
+            </p>
+            <p>
+                From simple Stochastic Gradient Descent (SGD) to Adam (Adaptive Moment Estimation) and its weight-decay corrected variant AdamW, optimizers have evolved to handle flat regions, saddle points, and noisy training landscapes.
+            </p>
+
+            <h2>Adaptive Rates: From SGD to AdamW</h2>
+            <p>
+                SGD applies a fixed learning rate to the gradient. If the gradient is steep, the step is large; if it is flat, steps crawl.
+            </p>
+            <p>
+                Adam tracks the running exponential average of both the gradient (first moment) and the squared gradient (second moment), scaling learning rates dynamically per parameter. AdamW corrects a minor mistake in early Adam integrations by decoupling weight decay from the gradient update step directly.
+            </p>
+
+            <!-- Interactive Widget -->
+            <div class="interactive-widget">
+                <div class="widget-title">Optimizer Descent Path Simulator</div>
+                <p style="font-size: 13px; color: var(--ink3); margin-bottom: 16px;">
+                    Trigger the path descent. Observe how simple SGD oscillates in valleys, AdamW adapts quickly but overshoots, while Muon (using matrix orthogonalization) descends directly.
+                </p>
+
+                <div class="opt-container">
+                    <div class="landscape-wrap">
+                        <canvas class="landscape-canvas" id="canvas-opt" width="320" height="240"></canvas>
+                    </div>
+
+                    <div class="opt-legend">
+                        <div class="legend-item"><div class="dot-sgd"></div><span>SGD</span></div>
+                        <div class="legend-item"><div class="dot-adam"></div><span>AdamW</span></div>
+                        <div class="legend-item"><div class="dot-muon"></div><span>Muon</span></div>
+                    </div>
+
+                    <button class="nl-btn" id="btn-run-opt">Run Optimization Path</button>
+                </div>
+            </div>
+
+            <h2>Enter Muon: Orthogonalized Gradient Descent</h2>
+            <p>
+                Recent experiments introduced **Muon**, a new optimizer designed specifically for training the Feed-Forward networks of Transformers. Instead of updating coordinates independently, Muon computes the gradient matrix and applies **Newton-Schulz iteration** to output an orthogonalized update.
+            </p>
+            <p>
+                By keeping updates orthogonal, Muon prevents parameter values from collapsing into narrow valleys and speeds up initial convergence.
+            </p>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Optimizer Animation Script -->
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+
+        // --- Optimizer Canvas Animation ---
+        const canvas = document.getElementById('canvas-opt');
+        const ctx = canvas.getContext('2d');
+        const btnRun = document.getElementById('btn-run-opt');
+
+        // Draw loss contours
+        function drawContour() {
+            ctx.fillStyle = '#faf9f6';
+            ctx.fillRect(0, 0, 320, 240);
+
+            ctx.strokeStyle = '#e8e4db';
+            ctx.lineWidth = 1;
+
+            // Draw concentric ellipses representing a loss valley
+            const centerX = 160;
+            const centerY = 120;
+            for (let r = 20; r < 200; r += 20) {
+                ctx.beginPath();
+                ctx.ellipse(centerX, centerY, r * 1.4, r * 0.8, Math.PI / 6, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+            
+            // Minimum point
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 3, 0, 2 * Math.PI);
+            ctx.fillStyle = 'var(--accent)';
+            ctx.fill();
+        }
+
+        drawContour();
+
+        // Coordinates for trajectories
+        const trajectories = {
+            sgd: [
+                {x: 20, y: 30}, {x: 45, y: 75}, {x: 80, y: 50}, {x: 95, y: 110},
+                {x: 125, y: 95}, {x: 135, y: 135}, {x: 148, y: 112}, {x: 153, y: 125}, {x: 160, y: 120}
+            ],
+            adam: [
+                {x: 20, y: 30}, {x: 70, y: 90}, {x: 110, y: 150}, {x: 180, y: 140},
+                {x: 150, y: 110}, {x: 165, y: 125}, {x: 160, y: 120}
+            ],
+            muon: [
+                {x: 20, y: 30}, {x: 65, y: 65}, {x: 110, y: 95}, {x: 140, y: 110}, {x: 160, y: 120}
+            ]
+        };
+
+        function animatePath() {
+            let t = 0;
+            btnRun.disabled = true;
+
+            const interval = setInterval(() => {
+                drawContour();
+
+                // Draw SGD path
+                ctx.beginPath();
+                ctx.moveTo(trajectories.sgd[0].x, trajectories.sgd[0].y);
+                const limitSgd = Math.min(t, trajectories.sgd.length - 1);
+                for (let i = 1; i <= limitSgd; i++) {
+                    ctx.lineTo(trajectories.sgd[i].x, trajectories.sgd[i].y);
+                }
+                ctx.strokeStyle = '#9a9a92';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // Draw dot
+                ctx.beginPath();
+                ctx.arc(trajectories.sgd[limitSgd].x, trajectories.sgd[limitSgd].y, 4, 0, 2*Math.PI);
+                ctx.fillStyle = '#9a9a92';
+                ctx.fill();
+
+                // Draw AdamW path
+                ctx.beginPath();
+                ctx.moveTo(trajectories.adam[0].x, trajectories.adam[0].y);
+                const limitAdam = Math.min(t, trajectories.adam.length - 1);
+                for (let i = 1; i <= limitAdam; i++) {
+                    ctx.lineTo(trajectories.adam[i].x, trajectories.adam[i].y);
+                }
+                ctx.strokeStyle = 'var(--accent2)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // Draw dot
+                ctx.beginPath();
+                ctx.arc(trajectories.adam[limitAdam].x, trajectories.adam[limitAdam].y, 4, 0, 2*Math.PI);
+                ctx.fillStyle = 'var(--accent2)';
+                ctx.fill();
+
+                // Draw Muon path
+                ctx.beginPath();
+                ctx.moveTo(trajectories.muon[0].x, trajectories.muon[0].y);
+                const limitMuon = Math.min(t, trajectories.muon.length - 1);
+                for (let i = 1; i <= limitMuon; i++) {
+                    ctx.lineTo(trajectories.muon[i].x, trajectories.muon[i].y);
+                }
+                ctx.strokeStyle = 'var(--accent)';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                // Draw dot
+                ctx.beginPath();
+                ctx.arc(trajectories.muon[limitMuon].x, trajectories.muon[limitMuon].y, 4, 0, 2*Math.PI);
+                ctx.fillStyle = 'var(--accent)';
+                ctx.fill();
+
+                t++;
+                if (t >= Math.max(trajectories.sgd.length, trajectories.adam.length, trajectories.muon.length)) {
+                    clearInterval(interval);
+                    btnRun.disabled = false;
+                }
+            }, 300);
+        }
+
+        btnRun.addEventListener('click', animatePath);
+    </script>
+</body>
+
+</html>

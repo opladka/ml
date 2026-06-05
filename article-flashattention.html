@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlashAttention 3 — ML Digest</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .memory-widget-box {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .simulation-lane {
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .lane-header {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--ink3);
+            text-transform: uppercase;
+        }
+        .memory-flow {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            height: 32px;
+            position: relative;
+        }
+        .mem-node {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .node-hbm {
+            background: #cbd5e1;
+            color: var(--ink2);
+        }
+        .node-sram {
+            background: var(--accent2);
+            color: white;
+        }
+        .progress-bar-wrap {
+            height: 8px;
+            background: var(--bg3);
+            border-radius: 4px;
+            overflow: hidden;
+            flex-grow: 1;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+        }
+        .action-row {
+            display: flex;
+            justify-content: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="article-container">
+        <div class="article-header">
+            <div class="hero-kicker">Tutorials · May 2026</div>
+            <h1>FlashAttention 3: What Changed and Why It Matters</h1>
+            <div class="article-header-meta">
+                <div class="hero-author-chip">
+                    <div class="hac-avatar">DP</div>
+                    <span>Dev Patel</span>
+                </div>
+                <div class="hmeta-dot"></div>
+                <span>May 12, 2026</span>
+                <div class="hmeta-dot"></div>
+                <span>7 min read</span>
+                <div class="hmeta-dot"></div>
+                <span style="border: 1px solid var(--rule); padding: 1px 6px; border-radius: 3px;">Tutorials</span>
+            </div>
+        </div>
+
+        <div class="article-body">
+            <p>
+                As context lengths stretch from 8K tokens to over a million, computing self-attention becomes the primary computational bottleneck in LLM execution. While float execution speeds (FLOPs) continue to climb on modern accelerators, reading data to and from memory remains remarkably slow. Attention is **memory-bandwidth bound**.
+            </p>
+            <p>
+                Standard self-attention computes and writes the full <code>N x N</code> attention matrix to High Bandwidth Memory (HBM), reads it back for softmax scaling, and writes the output back to HBM. FlashAttention tiling bypasses this cycle completely.
+            </p>
+
+            <h2>SRAM Tiling and Cache Blocking</h2>
+            <p>
+                FlashAttention divides the Query, Key, and Value matrices into block blocks. Instead of materializing the intermediate matrix in slow HBM, blocks are loaded to fast GPU **SRAM (Static RAM)** on-chip, scaled using running softmax coefficients, and written out to the final output matrix directly.
+            </p>
+
+            <!-- Interactive Widget -->
+            <div class="interactive-widget">
+                <div class="widget-title">Memory Bandwidth Benchmark Simulator</div>
+                <p style="font-size: 13px; color: var(--ink3); margin-bottom: 16px;">
+                    Trigger the read/write execution run. Observe how FlashAttention tiling logic skips intermediate HBM transfers, completing the attention output step significantly faster than standard attention.
+                </p>
+
+                <div class="memory-widget-box">
+                    <div class="simulation-lane">
+                        <div class="lane-header">
+                            <span>Standard Attention</span>
+                            <span id="std-speed">Idle</span>
+                        </div>
+                        <div class="memory-flow">
+                            <span class="mem-node node-hbm">HBM</span>
+                            <span style="font-size: 10px; color: var(--ink4);">🠖</span>
+                            <span class="mem-node node-sram">SRAM</span>
+                            <span style="font-size: 10px; color: var(--ink4);">🠖</span>
+                            <span class="mem-node node-hbm">HBM (Matrix)</span>
+                            <span style="font-size: 10px; color: var(--ink4);">🠖</span>
+                            <span class="mem-node node-sram">SRAM</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 10px;">
+                            <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-std"></div></div>
+                            <span style="font-family:var(--mono); font-size: 10px; min-width:30px;" id="val-std">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="simulation-lane">
+                        <div class="lane-header">
+                            <span>FlashAttention 3</span>
+                            <span id="flash-speed" style="color:var(--success);">Idle</span>
+                        </div>
+                        <div class="memory-flow">
+                            <span class="mem-node node-hbm">HBM</span>
+                            <span style="font-size: 10px; color: var(--ink4);">🠖</span>
+                            <span class="mem-node node-sram">SRAM (Blocked)</span>
+                            <span style="font-size: 10px; color: var(--ink4);">🠖</span>
+                            <span class="mem-node node-hbm">HBM (Output)</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap: 10px;">
+                            <div class="progress-bar-wrap"><div class="progress-bar-fill" id="pb-flash" style="background:var(--success);"></div></div>
+                            <span style="font-family:var(--mono); font-size: 10px; min-width:30px;" id="val-flash">0%</span>
+                        </div>
+                    </div>
+
+                    <div class="action-row">
+                        <button class="nl-btn" id="btn-run-sim">Run Simulation</button>
+                    </div>
+                </div>
+            </div>
+
+            <h2>What's New in FlashAttention 3</h2>
+            <p>
+                FlashAttention 3 leverages the latest Hopper GPU architecture updates. Key enhancements include:
+            </p>
+            <ul>
+                <li><strong>Warp-Group GEMM:</strong> Utilizing Tensor Core matrix multiply operations asynchronously.</li>
+                <li><strong>Overlapping Compute and Memory:</strong> Pipelining block load steps from HBM to SRAM while computing the previous block on Tensor Cores concurrently.</li>
+                <li><strong>Low Precision Scale:</strong> Supporting FP8 formats with dynamically scaled mantissas.</li>
+            </ul>
+
+            <div class="code-header">
+                <span>flash_attn.cu (CUDA Kernel Concept)</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy code</button>
+            </div>
+            <pre><code>// CUDA Block Tiling Loop
+__global__ void flash_attention_kernel(float* Q, float* K, float* V, float* O) {
+    int tx = threadIdx.x;
+    int bx = blockIdx.x;
+
+    // Load Q block to Shared Memory (SRAM)
+    __shared__ float Q_shared[BLOCK_SIZE][D_K];
+    __shared__ float K_shared[BLOCK_SIZE][D_K];
+    
+    // Async load from HBM
+    load_async(Q_shared, &Q[bx * BLOCK_SIZE], tx);
+    
+    for (int j = 0; j < num_blocks; j++) {
+        // Overlap K, V load with GEMM compute
+        load_async(K_shared, &K[j * BLOCK_SIZE], tx);
+        __syncthreads();
+        
+        // Accumulate attention scores locally on-chip
+        compute_block_attention(Q_shared, K_shared);
+    }
+}</code></pre>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Visualizer Script -->
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+
+        // Copy button
+        function copyCode(btn) {
+            const pre = btn.parentElement.nextElementSibling;
+            const code = pre.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy code'; }, 2000);
+            });
+        }
+
+        // --- Memory Flow Animation ---
+        const btnRun = document.getElementById('btn-run-sim');
+        const pbStd = document.getElementById('pb-std');
+        const pbFlash = document.getElementById('pb-flash');
+        const valStd = document.getElementById('val-std');
+        const valFlash = document.getElementById('val-flash');
+        const stdSpeed = document.getElementById('std-speed');
+        const flashSpeed = document.getElementById('flash-speed');
+
+        btnRun.addEventListener('click', () => {
+            btnRun.disabled = true;
+            
+            // Standard Attention Run (Slow)
+            stdSpeed.textContent = 'Running (HBM read/write)...';
+            stdSpeed.style.color = 'var(--accent)';
+            let stdProgress = 0;
+            const stdInterval = setInterval(() => {
+                stdProgress += 2;
+                pbStd.style.width = `${stdProgress}%`;
+                valStd.textContent = `${stdProgress}%`;
+                if (stdProgress >= 100) {
+                    clearInterval(stdInterval);
+                    stdSpeed.textContent = 'Done (3.2x slower)';
+                    btnRun.disabled = false;
+                }
+            }, 60);
+
+            // FlashAttention Run (Fast)
+            flashSpeed.textContent = 'Running (SRAM Tiled)...';
+            flashSpeed.style.color = 'var(--success)';
+            let flashProgress = 0;
+            const flashInterval = setInterval(() => {
+                flashProgress += 6;
+                if (flashProgress > 100) flashProgress = 100;
+                pbFlash.style.width = `${flashProgress}%`;
+                valFlash.textContent = `${flashProgress}%`;
+                if (flashProgress >= 100) {
+                    clearInterval(flashInterval);
+                    flashSpeed.textContent = 'Done (100 GFLOPS)';
+                }
+            }, 20);
+        });
+    </script>
+</body>
+
+</html>

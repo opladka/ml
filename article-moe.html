@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mixture of Experts — ML Digest</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .router-widget-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .router-input-row {
+            display: flex;
+            gap: 10px;
+        }
+        .router-input {
+            flex-grow: 1;
+            padding: 10px 14px;
+            border: 1px solid var(--rule);
+            background: var(--bg);
+            border-radius: 4px;
+            font-family: var(--sans);
+            font-size: 14px;
+            outline: none;
+        }
+        .router-input:focus {
+            border-color: var(--accent);
+        }
+        .router-visualizer-box {
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            height: 280px;
+            position: relative;
+            overflow: hidden;
+        }
+        .router-node {
+            width: 72px;
+            height: 40px;
+            background: var(--bg3);
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            position: absolute;
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            z-index: 5;
+        }
+        .experts-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 20px;
+            position: absolute;
+            bottom: 40px;
+        }
+        .expert-block {
+            width: 80px;
+            padding: 12px 6px;
+            background: var(--bg2);
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--ink3);
+            transition: all 0.3s;
+        }
+        .expert-block.active {
+            background: var(--accent-light);
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(181, 69, 27, 0.08);
+        }
+        .routing-particle {
+            position: absolute;
+            padding: 4px 8px;
+            background: var(--accent2);
+            color: white;
+            font-family: var(--mono);
+            font-size: 11px;
+            border-radius: 3px;
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            transition: top 1s cubic-bezier(0.25, 0.46, 0.45, 0.94), left 1s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s;
+            z-index: 10;
+        }
+        .routing-link {
+            position: absolute;
+            top: 80px;
+            height: 120px;
+            background: var(--rule2);
+            width: 2px;
+            transform-origin: top center;
+            z-index: 2;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="article-container">
+        <div class="article-header">
+            <div class="hero-kicker">Research · May 2026</div>
+            <h1>Mixture of Experts: Scaling Without the Cost</h1>
+            <div class="article-header-meta">
+                <div class="hero-author-chip">
+                    <div class="hac-avatar">SK</div>
+                    <span>Sarah K.</span>
+                </div>
+                <div class="hmeta-dot"></div>
+                <span>May 18, 2026</span>
+                <div class="hmeta-dot"></div>
+                <span>8 min read</span>
+                <div class="hmeta-dot"></div>
+                <span style="border: 1px solid var(--rule); padding: 1px 6px; border-radius: 3px;">Research</span>
+            </div>
+        </div>
+
+        <div class="article-body">
+            <p>
+                As LLMs scale, training denser parameter sets becomes financially and computationally prohibitive. Scaling parameters improves capacity, but standard compute demands multiply linear costs with every layer extension. <strong>Mixture of Experts (MoE)</strong> addresses this tradeoff by scaling model parameters while keeping computational costs constant.
+            </p>
+            <p>
+                In a standard Feed-Forward Network (FFN), every token passes through the same dense matrix layers. In an MoE layer, the single dense FFN is replaced by multiple independent "expert" FFNs. A lightweight gating network, or **router**, directs each token to only one or two experts.
+            </p>
+
+            <h2>Token Routing Architecture</h2>
+            <p>
+                For every token vector <code>x</code>, the router computes a probability distribution over the <code>N</code> experts:
+            </p>
+
+            <div style="text-align: center; margin: 32px 0; font-family: var(--serif); font-size: 20px; color: var(--ink);">
+                G(x) = Softmax( KeepTopK( H(x), K ) )
+            </div>
+
+            <p>
+                Where <code>H(x)</code> is a raw linear projection of the token vector <code>x</code>, and the <code>KeepTopK</code> operator sets all values to negative infinity except for the top-k highest scoring elements.
+            </p>
+
+            <!-- Interactive Widget -->
+            <div class="interactive-widget">
+                <div class="widget-title">Interactive Token Router Demo</div>
+                <p style="font-size: 13px; color: var(--ink3); margin-bottom: 16px;">
+                    Enter a word (e.g. "attention", "GPU", "matrix", "optimize") and click "Route". Watch how the token flows into the router and is dynamically routed to the top specialized expert module.
+                </p>
+
+                <div class="router-widget-wrap">
+                    <div class="router-input-row">
+                        <input type="text" class="router-input" id="word-input" value="attention" placeholder="Type a concept...">
+                        <button class="nl-btn" id="btn-route">Route Token</button>
+                    </div>
+
+                    <div class="router-visualizer-box" id="visualizer-box">
+                        <!-- Connecting links -->
+                        <div class="routing-link" id="link-exp1"></div>
+                        <div class="routing-link" id="link-exp2"></div>
+                        <div class="routing-link" id="link-exp3"></div>
+                        <div class="routing-link" id="link-exp4"></div>
+
+                        <div class="router-node">Router</div>
+
+                        <div class="experts-row">
+                            <div class="expert-block" id="exp1">
+                                <strong>Expert 1</strong><br><span style="font-size: 8px;">Optimization</span>
+                            </div>
+                            <div class="expert-block" id="exp2">
+                                <strong>Expert 2</strong><br><span style="font-size: 8px;">NLP Syntax</span>
+                            </div>
+                            <div class="expert-block" id="exp3">
+                                <strong>Expert 3</strong><br><span style="font-size: 8px;">Math/Stat</span>
+                            </div>
+                            <div class="expert-block" id="exp4">
+                                <strong>Expert 4</strong><br><span style="font-size: 8px;">Hardware</span>
+                            </div>
+                        </div>
+
+                        <div class="routing-particle" id="particle"></div>
+                    </div>
+                </div>
+            </div>
+
+            <h2>Load Balancing and Routing Failure</h2>
+            <p>
+                If the router is left to optimize without constraints, it often collapses into a state where only a few experts receive most of the traffic. This defeats the purpose of distributed experts and creates bottlenecks.
+            </p>
+            <p>
+                To prevent this, models use an auxiliary **load balancing loss** during training. This encourages equal token distribution across all experts:
+            </p>
+
+            <div class="code-header">
+                <span>MoERouter.py (PyTorch Implementation)</span>
+                <button class="copy-btn" onclick="copyCode(this)">Copy code</button>
+            </div>
+            <pre><code>import torch
+import torch.nn as nn
+import torch.nn.functional as F
+
+class Top2Router(nn.Module):
+    def __init__(self, d_model, num_experts):
+        super().__init__()
+        self.wg = nn.Linear(d_model, num_experts, bias=False)
+
+    def forward(self, x):
+        # x: [Batch, SeqLen, D_model]
+        logits = self.wg(x) # [Batch*SeqLen, num_experts]
+        
+        # Softmax over expert scores
+        probs = F.softmax(logits, dim=-1)
+        
+        # Get top-2 experts
+        top_val, top_idx = torch.topk(probs, k=2, dim=-1)
+        return top_idx, top_val</code></pre>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div style="border-top:1px solid var(--rule)">
+        <footer>
+            <div class="footer-inner">
+                <div>
+                    <div class="footer-brand">ML <span>Digest</span></div>
+                    <div class="footer-desc">Independent coverage of machine learning research, written for practitioners who want depth over hype.</div>
+                </div>
+                <div class="footer-col">
+                    <h4>Articles</h4>
+                    <ul>
+                        <li><a href="archive.html?tag=Research">Research Summaries</a></li>
+                        <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+                        <li><a href="archive.html?tag=Papers">Paper Walkthroughs</a></li>
+                        <li><a href="archive.html?tag=Opinion">Opinion</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Topics</h4>
+                    <ul>
+                        <li><a href="index.html?tag=Transformers">Transformers</a></li>
+                        <li><a href="index.html?tag=Diffusion">Diffusion</a></li>
+                        <li><a href="index.html?tag=Reinforcement%20Learning">Reinforcement Learning</a></li>
+                        <li><a href="index.html?tag=Interpretability">Interpretability</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="about.html#team">Authors</a></li>
+                        <li><a href="subscribe.html">Newsletter</a></li>
+                        <li><a href="#">RSS Feed</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <span>© 2026 ML Digest. All rights reserved.</span>
+                <span>Privacy · Terms · Contact</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Router Logic Script -->
+    <script>
+        const hamburger = document.getElementById('hamburger-menu');
+        const mobileMenu = document.getElementById('mobile-menu-drawer');
+        
+        hamburger.addEventListener('click', () => {
+            hamburger.classList.toggle('open');
+            if (mobileMenu.style.display === 'block') {
+                mobileMenu.style.display = 'none';
+            } else {
+                mobileMenu.style.display = 'block';
+            }
+        });
+
+        // Copy button
+        function copyCode(btn) {
+            const pre = btn.parentElement.nextElementSibling;
+            const code = pre.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => { btn.textContent = 'Copy code'; }, 2000);
+            });
+        }
+
+        // --- Router Flow Animation ---
+        const btnRoute = document.getElementById('btn-route');
+        const wordInput = document.getElementById('word-input');
+        const particle = document.getElementById('particle');
+        const visualizerBox = document.getElementById('visualizer-box');
+
+        // Draw connecting lines between Router and Experts
+        function drawLinks() {
+            const routerEl = document.querySelector('.router-node');
+            const experts = [
+                document.getElementById('exp1'),
+                document.getElementById('exp2'),
+                document.getElementById('exp3'),
+                document.getElementById('exp4')
+            ];
+
+            const links = [
+                document.getElementById('link-exp1'),
+                document.getElementById('link-exp2'),
+                document.getElementById('link-exp3'),
+                document.getElementById('link-exp4')
+            ];
+
+            const boxRect = visualizerBox.getBoundingClientRect();
+            const routerRect = routerEl.getBoundingClientRect();
+            
+            const rX = (routerRect.left + routerRect.width/2) - boxRect.left;
+            const rY = (routerRect.top + routerRect.height) - boxRect.top;
+
+            experts.forEach((exp, idx) => {
+                const expRect = exp.getBoundingClientRect();
+                const eX = (expRect.left + expRect.width/2) - boxRect.left;
+                const eY = expRect.top - boxRect.top;
+
+                const dx = eX - rX;
+                const dy = eY - rY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+                const link = links[idx];
+                link.style.left = `${rX}px`;
+                link.style.top = `${rY}px`;
+                link.style.width = `2px`;
+                link.style.height = `${dist}px`;
+                link.style.transform = `rotate(${angle - 90}deg)`;
+            });
+        }
+
+        window.addEventListener('resize', drawLinks);
+        setTimeout(drawLinks, 300); // Trigger link draw
+
+        btnRoute.addEventListener('click', () => {
+            const word = wordInput.value.trim();
+            if (!word) return;
+
+            // Determine route expert
+            let expertId = 'exp2'; // Default: NLP Syntax
+            const lower = word.toLowerCase();
+
+            if (lower.includes('opt') || lower.includes('gradient') || lower.includes('learn') || lower.includes('adam')) {
+                expertId = 'exp1';
+            } else if (lower.includes('matrix') || lower.includes('math') || lower.includes('prob') || lower.includes('stat') || lower.includes('diff')) {
+                expertId = 'exp3';
+            } else if (lower.includes('gpu') || lower.includes('sram') || lower.includes('hbm') || lower.includes('hardware') || lower.includes('tpu') || lower.includes('silicon')) {
+                expertId = 'exp4';
+            }
+
+            const targetExpert = document.getElementById(expertId);
+            const routerNode = document.querySelector('.router-node');
+
+            // Set up particle starting position
+            const boxRect = visualizerBox.getBoundingClientRect();
+            const routerRect = routerNode.getBoundingClientRect();
+            
+            const rX = (routerRect.left + routerRect.width/2) - boxRect.left;
+            const rY = (routerRect.top + routerRect.height/2) - boxRect.top;
+
+            particle.textContent = word;
+            particle.style.left = `${rX}px`;
+            particle.style.top = `${rY}px`;
+            particle.style.opacity = '1';
+
+            // Reset active state of experts
+            document.querySelectorAll('.expert-block').forEach(exp => exp.classList.remove('active'));
+
+            // Animate token
+            setTimeout(() => {
+                const expRect = targetExpert.getBoundingClientRect();
+                const eX = (expRect.left + expRect.width/2) - boxRect.left;
+                const eY = (expRect.top + expRect.height/2) - boxRect.top;
+
+                particle.style.left = `${eX}px`;
+                particle.style.top = `${eY}px`;
+            }, 50);
+
+            // Activate expert and fade particle
+            setTimeout(() => {
+                targetExpert.classList.add('active');
+                particle.style.opacity = '0';
+            }, 1050);
+        });
+    </script>
+</body>
+
+</html>

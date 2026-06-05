@@ -1,0 +1,1607 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attention Is All You Need — A Deep Dive into Transformer Architecture</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ══════════════════════════════════════
+   ARTICLE STYLES
+══════════════════════════════════════ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --ink: #1a1a1a;
+            --ink2: #444;
+            --ink3: #777;
+            --rule: #e0ddd8;
+            --bg: #faf9f7;
+            --bg2: #f2f0eb;
+            --accent: #b5451b;
+            --link: #2563eb;
+            --code-bg: #f0ede8;
+            --serif: 'Lora', Georgia, serif;
+            --sans: 'Inter', system-ui, sans-serif;
+            --mono: 'IBM Plex Mono', monospace;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--ink);
+            font-family: var(--serif);
+            font-size: 18px;
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        /* ── NAV ── */
+        nav {
+            border-bottom: 1px solid var(--rule);
+            padding: 0 clamp(20px, 5vw, 60px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 56px;
+            background: var(--bg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            font-family: var(--serif);
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--ink);
+            text-decoration: none;
+            letter-spacing: -0.01em;
+        }
+
+        .nav-brand span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 28px;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            font-family: var(--sans);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--ink3);
+            text-decoration: none;
+            letter-spacing: 0.01em;
+            transition: color .15s;
+        }
+
+        .nav-links a:hover {
+            color: var(--ink);
+        }
+
+        .nav-sub {
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            background: var(--accent);
+            color: #fff !important;
+            padding: 6px 14px;
+            border-radius: 3px;
+            font-weight: 600;
+            transition: opacity .15s;
+        }
+
+        .nav-sub:hover {
+            opacity: .88;
+        }
+
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            cursor: pointer;
+            padding: 4px;
+            z-index: 110;
+        }
+
+        .hamburger span {
+            width: 22px;
+            height: 1.5px;
+            background: var(--ink);
+            border-radius: 1px;
+            display: block;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+
+        /* Mobile Nav Open State */
+        .hamburger.open span:nth-child(1) {
+            transform: translateY(6.5px) rotate(45deg);
+        }
+        .hamburger.open span:nth-child(2) {
+            opacity: 0;
+        }
+        .hamburger.open span:nth-child(3) {
+            transform: translateY(-6.5px) rotate(-45deg);
+        }
+
+        .mobile-menu {
+            display: none;
+            position: fixed;
+            top: 56px;
+            left: 0;
+            width: 100%;
+            background: var(--bg);
+            border-bottom: 1px solid var(--rule);
+            padding: 20px;
+            z-index: 99;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .mobile-menu ul {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mobile-menu a {
+            font-family: var(--sans);
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--ink2);
+            text-decoration: none;
+            display: block;
+        }
+
+        .mobile-menu .nav-sub {
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        /* ── ARTICLE WRAPPER ── */
+        .article-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 60px 40px 120px;
+        }
+
+        /* ── HEADER ── */
+        .article-kicker {
+            font-family: var(--sans);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 16px;
+        }
+
+        h1.article-title {
+            font-family: var(--serif);
+            font-size: clamp(28px, 4vw, 42px);
+            font-weight: 600;
+            line-height: 1.25;
+            color: var(--ink);
+            margin-bottom: 20px;
+        }
+
+        .article-subtitle {
+            font-size: 19px;
+            font-style: italic;
+            color: var(--ink2);
+            line-height: 1.6;
+            margin-bottom: 28px;
+            border-left: 3px solid var(--accent);
+            padding-left: 18px;
+        }
+
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: var(--sans);
+            font-size: 13px;
+            color: var(--ink3);
+            padding-bottom: 28px;
+            border-bottom: 1px solid var(--rule);
+            margin-bottom: 40px;
+        }
+
+        .meta-dot {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--ink3);
+        }
+
+        .author-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg2);
+            border: 1px solid var(--rule);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--sans);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--ink2);
+        }
+
+        /* ── PROSE ── */
+        p {
+            margin-bottom: 24px;
+            color: var(--ink2);
+        }
+
+        p:first-of-type {
+            color: var(--ink);
+        }
+
+        h2 {
+            font-family: var(--serif);
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--ink);
+            margin: 48px 0 16px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--rule);
+        }
+
+        h3 {
+            font-family: var(--sans);
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin: 32px 0 12px;
+        }
+
+        /* pull quote */
+        blockquote {
+            margin: 36px 0;
+            padding: 20px 24px;
+            border-left: 4px solid var(--accent);
+            background: var(--bg2);
+            border-radius: 0 6px 6px 0;
+            font-style: italic;
+            color: var(--ink);
+            font-size: 19px;
+            line-height: 1.65;
+        }
+
+        /* code */
+        code {
+            font-family: var(--mono);
+            font-size: 14px;
+            background: var(--code-bg);
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            padding: 2px 6px;
+            color: var(--accent);
+        }
+
+        pre {
+            background: #1e1e2e;
+            border-radius: 8px;
+            padding: 24px;
+            overflow-x: auto;
+            margin: 28px 0;
+            border: 1px solid #2a2a3a;
+        }
+
+        pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: #cdd6f4;
+            font-size: 13.5px;
+            line-height: 1.7;
+        }
+
+        .tok-kw {
+            color: #cba6f7;
+        }
+
+        .tok-fn {
+            color: #89b4fa;
+        }
+
+        .tok-str {
+            color: #a6e3a1;
+        }
+
+        .tok-num {
+            color: #fab387;
+        }
+
+        .tok-cmt {
+            color: #6c7086;
+            font-style: italic;
+        }
+
+        /* figure */
+        figure {
+            margin: 36px 0;
+            background: var(--bg2);
+            border: 1px solid var(--rule);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .fig-diagram {
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        figcaption {
+            font-family: var(--sans);
+            font-size: 13px;
+            color: var(--ink3);
+            padding: 12px 20px;
+            border-top: 1px solid var(--rule);
+            line-height: 1.5;
+        }
+
+        figcaption strong {
+            color: var(--ink2);
+        }
+
+        /* inline diagram boxes */
+        .arch-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 4px 0;
+        }
+
+        .arch-box {
+            padding: 8px 18px;
+            border-radius: 6px;
+            font-family: var(--sans);
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .ab-blue {
+            background: #dbeafe;
+            border: 1px solid #93c5fd;
+            color: #1d4ed8;
+        }
+
+        .ab-green {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+        }
+
+        .ab-amber {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            color: #92400e;
+        }
+
+        .ab-gray {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+        }
+
+        .ab-purple {
+            background: #f3e8ff;
+            border: 1px solid #d8b4fe;
+            color: #6b21a8;
+        }
+
+        .arch-arrow {
+            font-size: 18px;
+            color: var(--ink3);
+        }
+
+        /* table */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 28px 0;
+            font-family: var(--sans);
+            font-size: 14px;
+        }
+
+        th {
+            background: var(--bg2);
+            border: 1px solid var(--rule);
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        td {
+            border: 1px solid var(--rule);
+            padding: 10px 14px;
+            color: var(--ink2);
+        }
+
+        tr:hover td {
+            background: var(--bg2);
+        }
+
+        /* formula */
+        .formula {
+            font-family: var(--mono);
+            font-size: 15px;
+            text-align: center;
+            padding: 16px;
+            background: var(--bg2);
+            border: 1px solid var(--rule);
+            border-radius: 6px;
+            margin: 24px 0;
+            color: var(--ink);
+            letter-spacing: 0.04em;
+        }
+
+        /* footnote / further reading */
+        .further {
+            margin-top: 56px;
+            padding-top: 28px;
+            border-top: 2px solid var(--rule);
+        }
+
+        .further h3 {
+            margin-top: 0;
+        }
+
+        .further ol {
+            padding-left: 20px;
+            font-family: var(--sans);
+            font-size: 14px;
+            color: var(--ink2);
+            line-height: 1.8;
+        }
+
+        .further a {
+            color: var(--link);
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        /* ── SECRET TRIGGER ──
+   Looks like an innocent "§" section marker in the byline.
+   Click it 3 times rapidly to open the chat modal.
+*/
+        #secret-trigger {
+            cursor: default;
+            user-select: none;
+            color: var(--ink3);
+            font-size: 13px;
+            transition: color 0.1s;
+        }
+
+        #secret-trigger.flash {
+            color: var(--accent);
+        }
+
+        /* ══════════════════════════════════════
+   CHAT MODAL OVERLAY
+══════════════════════════════════════ */
+        #chatOverlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(26, 26, 26, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #chatOverlay.open {
+            display: flex;
+        }
+
+        /* ── LOGIN MODAL ── */
+        #loginModal {
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-radius: 8px;
+            width: 100%;
+            max-width: 420px;
+            padding: 36px;
+            position: relative;
+            animation: modalIn 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+
+        #loginModal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            border-radius: 8px 8px 0 0;
+            background: var(--accent);
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.94) translateY(16px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .modal-title {
+            font-family: var(--mono);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+
+        .modal-sub {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--ink3);
+            letter-spacing: 0.1em;
+            margin-bottom: 28px;
+        }
+
+        .mfield {
+            margin-bottom: 16px;
+        }
+
+        .mfield label {
+            display: block;
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            color: var(--ink2);
+            margin-bottom: 8px;
+        }
+
+        .mfield input {
+            width: 100%;
+            background: var(--bg2);
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            color: var(--ink);
+            font-family: var(--mono);
+            font-size: 14px;
+            padding: 12px 14px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .mfield input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(181, 69, 27, 0.08);
+        }
+
+        .mfield input::placeholder {
+            color: var(--ink3);
+        }
+
+        .mbtn {
+            width: 100%;
+            padding: 13px;
+            background: transparent;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+            margin-top: 8px;
+        }
+
+        .mbtn:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .merr {
+            background: rgba(181, 69, 27, 0.05);
+            border: 1px solid rgba(181, 69, 27, 0.3);
+            border-radius: 4px;
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 11px;
+            padding: 10px 14px;
+            margin-top: 14px;
+            display: none;
+        }
+
+        .merr.show {
+            display: block;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 14px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--ink3);
+            font-size: 18px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px 6px;
+            border-radius: 4px;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .modal-close:hover {
+            color: var(--ink);
+            background: var(--bg2);
+        }
+
+        /* ── CHAT FULLSCREEN ── */
+        #chatScreen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            flex-direction: column;
+            z-index: 1001;
+        }
+
+        #chatScreen.open {
+            display: flex;
+        }
+
+        .chat-header {
+            background: var(--bg2);
+            border-bottom: 1px solid var(--rule);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .chat-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--accent);
+        }
+
+        .chat-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .chat-room-name {
+            font-family: var(--mono);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink);
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .chat-meta {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--ink3);
+            letter-spacing: 0.1em;
+            display: flex;
+            gap: 12px;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--rule);
+            transition: background 0.3s;
+            flex-shrink: 0;
+        }
+
+        .dot.online {
+            background: #166534;
+        }
+
+        .hbtn {
+            padding: 7px 14px;
+            background: transparent;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .hbtn:hover {
+            background: var(--accent);
+            color: var(--bg);
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scroll-behavior: smooth;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: var(--rule);
+            border-radius: 2px;
+        }
+
+        .empty-state {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: var(--ink3);
+            text-align: center;
+            font-family: var(--mono);
+        }
+
+        .empty-icon {
+            font-size: 32px;
+            opacity: 0.4;
+        }
+
+        .empty-title {
+            font-size: 12px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+        }
+
+        .empty-sub {
+            font-size: 11px;
+            max-width: 220px;
+            line-height: 1.5;
+        }
+
+        .msg {
+            display: flex;
+            flex-direction: column;
+            max-width: 72%;
+            animation: msgIn 0.25s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+
+        @keyframes msgIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px) scale(0.97);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .msg.mine {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .msg.theirs {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .msg-sender {
+            font-family: var(--mono);
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            padding: 0 4px;
+        }
+
+        .msg.mine .msg-sender {
+            color: var(--accent);
+        }
+
+        .msg.theirs .msg-sender {
+            color: var(--ink2);
+        }
+
+        .msg-bubble {
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-family: var(--sans);
+            font-size: 14px;
+            line-height: 1.55;
+            word-break: break-word;
+        }
+
+        .msg.mine .msg-bubble {
+            background: var(--bg2);
+            border: 1px solid var(--rule);
+            border-bottom-right-radius: 2px;
+            color: var(--ink);
+        }
+
+        .msg.theirs .msg-bubble {
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-bottom-left-radius: 2px;
+            color: var(--ink);
+        }
+
+        .msg-time {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: var(--ink3);
+            margin-top: 4px;
+            padding: 0 4px;
+        }
+
+        .sys-msg {
+            text-align: center;
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--ink3);
+            letter-spacing: 0.1em;
+            padding: 4px 0;
+        }
+
+        .typing-area {
+            padding: 0 20px 8px;
+            height: 24px;
+            flex-shrink: 0;
+        }
+
+        .typing-indicator {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--ink3);
+            letter-spacing: 0.1em;
+            display: none;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .typing-indicator.visible {
+            display: flex;
+        }
+
+
+        .typing-dots span {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--ink3);
+            animation: bounce 1.2s infinite;
+        }
+
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0)
+            }
+
+            30% {
+                transform: translateY(-5px)
+            }
+        }
+
+        .input-area {
+            padding: 14px 20px;
+            background: var(--bg2);
+            border-top: 1px solid var(--rule);
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+
+        #msgInput {
+            flex: 1;
+            background: var(--bg);
+            border: 1px solid var(--rule);
+            border-radius: 4px;
+            color: var(--ink);
+            font-family: var(--sans);
+            font-size: 14px;
+            padding: 11px 14px;
+            outline: none;
+            resize: none;
+            max-height: 120px;
+            overflow-y: auto;
+            line-height: 1.5;
+            transition: border-color 0.2s;
+        }
+
+        #msgInput:focus {
+            border-color: var(--accent);
+        }
+
+        #msgInput::placeholder {
+            color: var(--ink3);
+        }
+
+        #sendBtn {
+            background: var(--accent);
+            border: none;
+            border-radius: 4px;
+            color: var(--bg);
+            width: 42px;
+            height: 42px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 16px;
+            transition: opacity 0.2s;
+        }
+
+        #sendBtn:hover {
+            opacity: 0.82;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .article-wrap {
+                padding: 40px 20px 80px;
+            }
+
+            nav {
+                padding: 0 20px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .msg {
+                max-width: 88%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══════════════════════════════════════
+     ML ARTICLE (the disguise)
+══════════════════════════════════════ -->
+    <nav>
+        <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
+        <ul class="nav-links">
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+        <div class="hamburger" id="hamburger-menu" aria-label="Menu">
+            <span></span><span></span><span></span>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Drawer -->
+    <div class="mobile-menu" id="mobile-menu-drawer">
+        <ul>
+            <li><a href="archive.html?tag=Research">Research</a></li>
+            <li><a href="archive.html?tag=Tutorials">Tutorials</a></li>
+            <li><a href="archive.html?tag=Papers">Papers</a></li>
+            <li><a href="archive.html?tag=Datasets">Datasets</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a class="nav-sub" href="subscribe.html">Subscribe</a></li>
+        </ul>
+    </div>
+
+    <!-- Toggle drawer logic -->
+    <script>
+        document.getElementById('hamburger-menu').addEventListener('click', function() {
+            this.classList.toggle('open');
+            const drawer = document.getElementById('mobile-menu-drawer');
+            if (drawer.style.display === 'block') {
+                drawer.style.display = 'none';
+            } else {
+                drawer.style.display = 'block';
+            }
+        });
+    </script>
+
+    <div class="article-wrap">
+
+        <div class="article-kicker">Deep Learning · Architecture</div>
+
+        <h1 class="article-title">Attention Is All You Need: A Deep Dive into Transformer Architecture</h1>
+
+        <p class="article-subtitle">How a 2017 paper from Google Brain quietly dismantled thirty years of sequential
+            thinking in neural networks — and why that matters for everything from search to protein folding.</p>
+
+        <div class="article-meta">
+            <div class="author-avatar">AR</div>
+            <span>Arjun Rao</span>
+            <div class="meta-dot"></div>
+            <span>June 3, 2026</span>
+            <div class="meta-dot"></div>
+            <span>14 min read</span>
+            <div class="meta-dot"></div>
+            <!-- SECRET TRIGGER: click 3 times fast -->
+            <span id="secret-trigger" title="§">§</span>
+        </div>
+
+        <p>Before 2017, the dominant paradigm for sequence modelling was the recurrent neural network. RNNs — and their
+            more capable cousins, LSTMs and GRUs — processed sequences one token at a time, maintaining a hidden state
+            that tried to compress everything seen so far into a fixed-size vector. It worked. Up to a point.</p>
+
+        <p>The fundamental limitation was gradient flow. In a sequence of 512 tokens, the gradient signal from the last
+            token has to travel backwards through 512 multiplicative operations to reach the first. By the time it
+            arrives, it has either vanished or exploded. Long-range dependencies — like resolving a pronoun three
+            paragraphs after its antecedent — were notoriously difficult to learn.</p>
+
+        <blockquote>"The dominant sequence transduction models are based on complex recurrent or convolutional neural
+            networks. We propose a new simple network architecture, the Transformer, based solely on attention
+            mechanisms." — Vaswani et al., 2017</blockquote>
+
+        <p>The Transformer discarded recurrence entirely. Instead, every token in a sequence attends directly to every
+            other token in a single operation. The path length between any two positions is constant: O(1) rather than
+            O(n). This simple change had consequences that are still being felt today.</p>
+
+        <h2>The Anatomy of Attention</h2>
+
+        <p>The core mechanism is scaled dot-product attention. Given a sequence of input vectors, you project each one
+            three times: into a query (<code>Q</code>), a key (<code>K</code>), and a value (<code>V</code>). The output
+            for each position is a weighted sum of all the values, where the weight is determined by the compatibility
+            between that position's query and every other position's key.</p>
+
+        <div class="formula">Attention(Q, K, V) = softmax( QKᵀ / √dₖ ) · V</div>
+
+        <p>The <code>√dₖ</code> scaling factor prevents the dot products from growing so large that they push the
+            softmax into regions of extremely small gradients. Without it, training becomes unstable in high dimensions.
+        </p>
+
+        <h3>Multi-Head Attention</h3>
+
+        <p>A single attention head learns one pattern of compatibility. Multi-head attention runs <code>h</code>
+            attention heads in parallel, each with its own learned projections, then concatenates and projects the
+            results. Each head can specialise: one might track syntactic agreement, another coreference, another
+            positional proximity.</p>
+
+        <pre><code><span class="tok-kw">def</span> <span class="tok-fn">multi_head_attention</span>(Q, K, V, h, d_model):
+    d_k = d_model // h
+    heads = []
+    <span class="tok-kw">for</span> i <span class="tok-kw">in</span> range(h):
+        Q_i = Q @ W_q[i]   <span class="tok-cmt"># (seq, d_k)</span>
+        K_i = K @ W_k[i]
+        V_i = V @ W_v[i]
+        heads.append(attention(Q_i, K_i, V_i))
+    <span class="tok-kw">return</span> concat(heads) @ W_o  <span class="tok-cmt"># project back to d_model</span></code></pre>
+
+        <figure>
+            <div class="fig-diagram">
+                <div class="arch-row">
+                    <div class="arch-box ab-gray">Output</div>
+                </div>
+                <div class="arch-row"><span class="arch-arrow">↑</span></div>
+                <div class="arch-row">
+                    <div class="arch-box ab-purple">Linear projection</div>
+                </div>
+                <div class="arch-row"><span class="arch-arrow">↑</span></div>
+                <div class="arch-row" style="gap:6px">
+                    <div class="arch-box ab-blue">Head 1</div>
+                    <div class="arch-box ab-blue">Head 2</div>
+                    <div class="arch-box ab-blue">…</div>
+                    <div class="arch-box ab-blue">Head h</div>
+                </div>
+                <div class="arch-row"><span class="arch-arrow">↑</span></div>
+                <div class="arch-row" style="gap:6px">
+                    <div class="arch-box ab-green">Q</div>
+                    <div class="arch-box ab-amber">K</div>
+                    <div class="arch-box ab-green">V</div>
+                </div>
+            </div>
+            <figcaption><strong>Figure 1.</strong> Multi-head attention projects inputs into separate Q, K, V spaces for
+                each head, computes attention independently, then concatenates and projects.</figcaption>
+        </figure>
+
+        <h2>Positional Encoding</h2>
+
+        <p>Attention is inherently permutation-invariant: shuffle the tokens and you get the same attention weights
+            (just reordered). That's a problem for language, where word order is everything. The Transformer injects
+            positional information by adding a sinusoidal encoding to each token embedding before the first layer.</p>
+
+        <div class="formula">PE(pos, 2i) = sin(pos / 10000^(2i/d_model))<br>PE(pos, 2i+1) = cos(pos /
+            10000^(2i/d_model))</div>
+
+        <p>The sinusoidal design was chosen so that relative positions could be represented as a linear function of the
+            encodings — allowing the model to generalise to sequences longer than those seen during training. Modern
+            models typically replace this with learned positional embeddings or rotary position encodings (RoPE).</p>
+
+        <h2>The Full Encoder-Decoder Stack</h2>
+
+        <p>The original Transformer was designed for sequence-to-sequence tasks like machine translation. The encoder
+            processes the source sequence into contextualised representations. The decoder generates the target sequence
+            autoregressively, attending both to its own previous outputs and to the encoder's output via
+            cross-attention.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Inputs</th>
+                    <th>Key operation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Encoder self-attention</td>
+                    <td>Source tokens</td>
+                    <td>Each token attends to all source tokens</td>
+                </tr>
+                <tr>
+                    <td>Decoder self-attention</td>
+                    <td>Target tokens (masked)</td>
+                    <td>Each token attends to previous target tokens only</td>
+                </tr>
+                <tr>
+                    <td>Cross-attention</td>
+                    <td>Decoder + Encoder output</td>
+                    <td>Target tokens attend to all source representations</td>
+                </tr>
+                <tr>
+                    <td>Feed-forward</td>
+                    <td>Attention output</td>
+                    <td>Two linear layers with ReLU, applied position-wise</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p>Each sub-layer is wrapped in a residual connection followed by layer normalisation. This is the "Add & Norm"
+            pattern you'll see in every Transformer diagram. The residual connections are critical: they provide a
+            gradient highway that bypasses each sub-layer and makes training deep stacks feasible.</p>
+
+        <h2>Why It Generalised So Far</h2>
+
+        <p>It's worth pausing to ask why a machine translation architecture became the foundation of everything from GPT
+            to AlphaFold. The answer is that the Transformer's inductive biases are remarkably weak. Unlike CNNs (which
+            assume spatial locality) or RNNs (which assume temporal ordering), the Transformer makes no strong
+            assumption about the structure of its input. It will happily learn whatever patterns exist in the training
+            data — syntactic, semantic, structural, or otherwise.</p>
+
+        <p>This generality, combined with the parallelism that makes large-scale training feasible, is why BERT
+            (encoder-only), GPT (decoder-only), and T5 (encoder-decoder) all converged on the same core architecture.
+            The innovations since 2017 — flash attention, rotary embeddings, grouped query attention, mixture of experts
+            — are optimisations on top of a structure that has remained essentially unchanged.</p>
+
+        <blockquote>"We are still largely running the 2017 architecture. We've made it much bigger, much faster, and
+            much cheaper — but the core attention mechanism is the same eight lines of matrix algebra." — unnamed
+            researcher, NeurIPS 2024 panel</blockquote>
+
+        <h2>Implementation Notes</h2>
+
+        <p>If you're implementing a Transformer from scratch, a few things trip people up that the paper glosses over.
+            First, the learning rate schedule matters enormously — the original paper uses a warmup followed by inverse
+            square root decay, and deviating from this often causes divergence. Second, weight tying between the
+            embedding and the final linear layer is standard in language models and saves a significant fraction of
+            parameters. Third, the feed-forward dimension is typically 4× the model dimension, not the same size.</p>
+
+        <pre><code><span class="tok-kw">class</span> <span class="tok-fn">TransformerBlock</span>(nn.Module):
+    <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(self, d_model, n_heads, d_ff, dropout=<span class="tok-num">0.1</span>):
+        self.attn = MultiHeadAttention(d_model, n_heads)
+        self.ff   = FeedForward(d_model, d_ff)
+        self.ln1  = nn.LayerNorm(d_model)
+        self.ln2  = nn.LayerNorm(d_model)
+        self.drop = nn.Dropout(dropout)
+
+    <span class="tok-kw">def</span> <span class="tok-fn">forward</span>(self, x, mask=<span class="tok-kw">None</span>):
+        x = x + self.drop(self.attn(self.ln1(x), mask))  <span class="tok-cmt"># pre-norm</span>
+        x = x + self.drop(self.ff(self.ln2(x)))
+        <span class="tok-kw">return</span> x</code></pre>
+
+        <p>Note the pre-norm variant shown above — applying layer norm before each sub-layer rather than after. Most
+            modern implementations (GPT-2 onward) use pre-norm because it stabilises training at large scale, even
+            though the original paper used post-norm.</p>
+
+        <div class="further">
+            <h3>Further Reading</h3>
+            <ol>
+                <li>Vaswani et al. (2017). <a href="#">Attention Is All You Need.</a> NeurIPS.</li>
+                <li>Devlin et al. (2018). <a href="#">BERT: Pre-training of Deep Bidirectional Transformers.</a> NAACL.
+                </li>
+                <li>Su et al. (2021). <a href="#">RoFormer: Enhanced Transformer with Rotary Position Embedding.</a>
+                    arXiv.</li>
+                <li>Dao et al. (2022). <a href="#">FlashAttention: Fast and Memory-Efficient Exact Attention.</a>
+                    NeurIPS.</li>
+                <li>Hoffmann et al. (2022). <a href="#">Training Compute-Optimal Large Language Models.</a> arXiv.</li>
+            </ol>
+        </div>
+
+    </div><!-- /article-wrap -->
+
+
+    <!-- ══════════════════════════════════════
+     CHAT LOGIN MODAL (hidden)
+══════════════════════════════════════ -->
+    <div id="chatOverlay">
+        <div id="loginModal">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <div class="modal-title">◈ SecureRoom</div>
+            <div class="modal-sub">Private encrypted channel</div>
+
+            <div class="mfield">
+                <label>Your Name</label>
+                <input id="usernameInput" type="text" maxlength="20" placeholder="e.g. Alice" autocomplete="off"
+                    spellcheck="false">
+            </div>
+            <div class="mfield">
+                <label>Room Password</label>
+                <input id="passwordInput" type="password" placeholder="shared secret" autocomplete="off">
+            </div>
+
+            <button class="mbtn" onclick="joinRoom()">ENTER ROOM →</button>
+            <div class="merr" id="loginError"></div>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════
+     CHAT SCREEN (fullscreen, hidden)
+══════════════════════════════════════ -->
+    <div id="chatScreen">
+        <div class="chat-header">
+            <div class="chat-title-group">
+                <div class="chat-room-name">
+                    <span>🔒</span>
+                    <span id="roomTitle">SecureRoom</span>
+                </div>
+                <div class="chat-meta">
+                    <div class="status-pill">
+                        <div class="dot online" id="myDot"></div>
+                        <span id="myNameLabel">—</span>
+                    </div>
+                    <div class="status-pill">
+                        <div class="dot" id="theirDot"></div>
+                        <span id="theirNameLabel">waiting...</span>
+                    </div>
+                </div>
+            </div>
+            <button class="hbtn" onclick="leaveRoom()">LEAVE</button>
+        </div>
+
+        <div class="messages" id="messagesDiv">
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">💬</div>
+                <div class="empty-title">Room is ready</div>
+                <div class="empty-sub">Messages appear once both users are connected.</div>
+            </div>
+        </div>
+
+        <div class="typing-area">
+            <div class="typing-indicator" id="typingIndicator">
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+                <span id="typingLabel">typing...</span>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <textarea id="msgInput" rows="1" placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
+                maxlength="2000"></textarea>
+            <button id="sendBtn" onclick="sendMessage()">↑</button>
+        </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════════
+     FIREBASE + CHAT LOGIC
+══════════════════════════════════════ -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getDatabase, ref, push, onChildAdded, set, onValue,
+            serverTimestamp, onDisconnect, remove
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+        // ── SHA-256 ──
+        async function sha256(msg) {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        // ── AES-GCM ──
+        async function deriveKey(password) {
+            const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), { name: 'PBKDF2' }, false, ['deriveKey']);
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt: new TextEncoder().encode('secureroom-salt-v1'), iterations: 100000, hash: 'SHA-256' },
+                raw, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+            );
+        }
+        async function encrypt(text, password) {
+            const key = await deriveKey(password);
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+            const combined = new Uint8Array(iv.length + ct.byteLength);
+            combined.set(iv); combined.set(new Uint8Array(ct), iv.length);
+            return btoa(String.fromCharCode(...combined));
+        }
+        async function decrypt(b64, password) {
+            try {
+                const data = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+                const iv = data.slice(0, 12), ct = data.slice(12);
+                const key = await deriveKey(password);
+                const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+                return new TextDecoder().decode(pt);
+            } catch { return null; }
+        }
+
+        // ── Firebase config (hardcoded) ──
+        const FIREBASE_CONFIG = {
+            dbUrl: 'https://shortner-d314e-default-rtdb.asia-southeast1.firebasedatabase.app/',
+            apiKey: 'AIzaSyAGxY5Vs-gG-o1S-HYF4intZoVUeLCTR_o',
+            projectId: 'shortner-d314e',
+            appId: '1:357954139303:web:330f10a18bd3cdf0b15782',
+        };
+
+        // ── State ──
+        let db, app, messagesRef, presenceRef, typingRef;
+        let myName = '', myHandle = '', roomPassword = '', roomId = '';
+        let typingTimeout;
+        let seenMsgIds = new Set();
+
+        // Init firebase immediately
+        (function () {
+            try {
+                app = initializeApp({ apiKey: FIREBASE_CONFIG.apiKey, databaseURL: FIREBASE_CONFIG.dbUrl, projectId: FIREBASE_CONFIG.projectId, appId: FIREBASE_CONFIG.appId }, 'secureroom');
+                db = getDatabase(app);
+            } catch (e) { if (e.code !== 'app/duplicate-app') console.error(e); }
+        })();
+
+        // ── Secret trigger (click § 3 times within 1.5s) ──
+        let clickCount = 0, clickTimer;
+        document.getElementById('secret-trigger').addEventListener('click', () => {
+            clickCount++;
+            document.getElementById('secret-trigger').classList.add('flash');
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => {
+                clickCount = 0;
+                document.getElementById('secret-trigger').classList.remove('flash');
+            }, 1500);
+            if (clickCount >= 3) {
+                clickCount = 0;
+                clearTimeout(clickTimer);
+                document.getElementById('secret-trigger').classList.remove('flash');
+                openModal();
+            }
+        });
+
+        function openModal() {
+            document.getElementById('chatOverlay').classList.add('open');
+            setTimeout(() => document.getElementById('usernameInput').focus(), 100);
+        }
+        window.closeModal = function () {
+            document.getElementById('chatOverlay').classList.remove('open');
+        };
+        // close on overlay click
+        document.getElementById('chatOverlay').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+        // close on Escape
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        // ── Join Room ──
+        window.joinRoom = async function () {
+            const un = document.getElementById('usernameInput').value.trim();
+            const pw = document.getElementById('passwordInput').value;
+            const err = document.getElementById('loginError');
+
+            if (!un) { showErr(err, '✗ Enter your name.'); return; }
+            if (pw.length < 6) { showErr(err, '✗ Password must be at least 6 characters.'); return; }
+            err.classList.remove('show');
+
+            myName = un;
+            myHandle = un.substring(0, 16).replace(/[^a-zA-Z0-9_]/g, '_');
+            roomPassword = pw;
+            roomId = (await sha256(pw)).substring(0, 20);
+
+            messagesRef = ref(db, `rooms/${roomId}/messages`);
+            presenceRef = ref(db, `rooms/${roomId}/presence/${myHandle}`);
+            typingRef = ref(db, `rooms/${roomId}/typing/${myHandle}`);
+
+            await set(presenceRef, { name: myName, online: true, ts: serverTimestamp() });
+            onDisconnect(presenceRef).remove();
+            onDisconnect(typingRef).remove();
+
+            document.getElementById('roomTitle').textContent = 'Room #' + roomId.substring(0, 6).toUpperCase();
+            document.getElementById('myNameLabel').textContent = myName;
+
+            // presence watcher
+            onValue(ref(db, `rooms/${roomId}/presence`), snap => {
+                const data = snap.val() || {};
+                const others = Object.entries(data).filter(([k]) => k !== myHandle);
+                const dot = document.getElementById('theirDot');
+                const label = document.getElementById('theirNameLabel');
+                if (others.length > 0) {
+                    dot.className = 'dot online';
+                    label.textContent = others[0][1].name;
+                } else {
+                    dot.className = 'dot';
+                    label.textContent = 'waiting...';
+                }
+            });
+
+            // typing watcher
+            onValue(ref(db, `rooms/${roomId}/typing`), snap => {
+                const data = snap.val() || {};
+                const others = Object.entries(data).filter(([k, v]) => k !== myHandle && v === true);
+                const ti = document.getElementById('typingIndicator');
+                const tl = document.getElementById('typingLabel');
+                const other = document.getElementById('theirNameLabel').textContent;
+                if (others.length > 0) {
+                    tl.textContent = (other !== 'waiting...' ? other : 'Someone') + ' is typing…';
+                    ti.classList.add('visible');
+                } else {
+                    ti.classList.remove('visible');
+                }
+            });
+
+            // message watcher
+            onChildAdded(messagesRef, async snap => {
+                const id = snap.key;
+                if (seenMsgIds.has(id)) return;
+                seenMsgIds.add(id);
+                const d = snap.val();
+                const text = await decrypt(d.text, roomPassword);
+                const sender = await decrypt(d.sender, roomPassword);
+                if (!text || !sender) return;
+                hideEmpty();
+                appendMsg(sender, text, d.ts, sender === myName);
+            });
+
+            document.getElementById('chatOverlay').classList.remove('open');
+            document.getElementById('chatScreen').classList.add('open');
+            document.getElementById('msgInput').focus();
+        };
+
+        // ── Send ──
+        window.sendMessage = async function () {
+            const input = document.getElementById('msgInput');
+            const text = input.value.trim();
+            if (!text || !messagesRef) return;
+            await push(messagesRef, {
+                text: await encrypt(text, roomPassword),
+                sender: await encrypt(myName, roomPassword),
+                ts: serverTimestamp()
+            });
+            input.value = '';
+            input.style.height = '';
+            clearTyping();
+        };
+
+        // ── Append ──
+        function appendMsg(sender, text, ts, isMine) {
+            const container = document.getElementById('messagesDiv');
+            const div = document.createElement('div');
+            div.className = `msg ${isMine ? 'mine' : 'theirs'}`;
+            const time = ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+            div.innerHTML = `<div class="msg-sender">${esc(sender)}</div><div class="msg-bubble">${esc(text).replace(/\n/g, '<br>')}</div><div class="msg-time">${time}</div>`;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ── Leave ──
+        window.leaveRoom = function () {
+            if (!confirm('Leave the room?')) return;
+            if (presenceRef) remove(presenceRef);
+            if (typingRef) remove(typingRef);
+            messagesRef = presenceRef = typingRef = null;
+            seenMsgIds.clear();
+            document.getElementById('messagesDiv').innerHTML = `<div class="empty-state" id="emptyState"><div class="empty-icon">💬</div><div class="empty-title">Room is ready</div><div class="empty-sub">Messages appear once both users are connected.</div></div>`;
+            document.getElementById('chatScreen').classList.remove('open');
+        };
+
+        // ── Helpers ──
+        function clearTyping() {
+            clearTimeout(typingTimeout);
+            if (typingRef) set(typingRef, false);
+        }
+        function hideEmpty() {
+            const e = document.getElementById('emptyState');
+            if (e) e.remove();
+        }
+        function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
+        function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+        // ── Input events ──
+        document.getElementById('msgInput').addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            if (typingRef) {
+                set(typingRef, true);
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => { if (typingRef) set(typingRef, false); }, 2500);
+            }
+        });
+        document.getElementById('msgInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendMessage(); }
+        });
+        // also allow Enter key in modal password field
+        document.getElementById('passwordInput').addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') window.joinRoom();
+        });
+    </script>
+</body>
+
+</html>
