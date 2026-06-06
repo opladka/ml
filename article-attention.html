@@ -3,312 +3,17 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content">
     <title>Attention Is All You Need — A Deep Dive into Transformer Architecture</title>
     <link
         href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;1,400&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap"
         rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
     <style>
         /* ══════════════════════════════════════
-   ARTICLE STYLES
-══════════════════════════════════════ */
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        :root {
-            --ink: #1a1a1a;
-            --ink2: #444;
-            --ink3: #777;
-            --rule: #e0ddd8;
-            --bg: #faf9f7;
-            --bg2: #f2f0eb;
-            --accent: #b5451b;
-            --link: #2563eb;
-            --code-bg: #f0ede8;
-            --serif: 'Lora', Georgia, serif;
-            --sans: 'Inter', system-ui, sans-serif;
-            --mono: 'IBM Plex Mono', monospace;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            background: var(--bg);
-            color: var(--ink);
-            font-family: var(--serif);
-            font-size: 18px;
-            line-height: 1.8;
-            min-height: 100vh;
-        }
-
-        /* ── NAV ── */
-        nav {
-            border-bottom: 1px solid var(--rule);
-            padding: 0 clamp(20px, 5vw, 60px);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 56px;
-            background: var(--bg);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .nav-brand {
-            font-family: var(--serif);
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--ink);
-            text-decoration: none;
-            letter-spacing: -0.01em;
-        }
-
-        .nav-brand span {
-            color: var(--accent);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 28px;
-            list-style: none;
-            align-items: center;
-        }
-
-        .nav-links a {
-            font-family: var(--sans);
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--ink3);
-            text-decoration: none;
-            letter-spacing: 0.01em;
-            transition: color .15s;
-        }
-
-        .nav-links a:hover {
-            color: var(--ink);
-        }
-
-        .nav-sub {
-            font-size: 11px;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            background: var(--accent);
-            color: #fff !important;
-            padding: 6px 14px;
-            border-radius: 3px;
-            font-weight: 600;
-            transition: opacity .15s;
-        }
-
-        .nav-sub:hover {
-            opacity: .88;
-        }
-
-        .hamburger {
-            display: none;
-            flex-direction: column;
-            gap: 5px;
-            cursor: pointer;
-            padding: 4px;
-            z-index: 110;
-        }
-
-        .hamburger span {
-            width: 22px;
-            height: 1.5px;
-            background: var(--ink);
-            border-radius: 1px;
-            display: block;
-            transition: transform 0.3s, opacity 0.3s;
-        }
-
-        /* Mobile Nav Open State */
-        .hamburger.open span:nth-child(1) {
-            transform: translateY(6.5px) rotate(45deg);
-        }
-        .hamburger.open span:nth-child(2) {
-            opacity: 0;
-        }
-        .hamburger.open span:nth-child(3) {
-            transform: translateY(-6.5px) rotate(-45deg);
-        }
-
-        .mobile-menu {
-            display: none;
-            position: fixed;
-            top: 56px;
-            left: 0;
-            width: 100%;
-            background: var(--bg);
-            border-bottom: 1px solid var(--rule);
-            padding: 20px;
-            z-index: 99;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-
-        .mobile-menu ul {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .mobile-menu a {
-            font-family: var(--sans);
-            font-size: 15px;
-            font-weight: 500;
-            color: var(--ink2);
-            text-decoration: none;
-            display: block;
-        }
-
-        .mobile-menu .nav-sub {
-            text-align: center;
-            margin-top: 8px;
-        }
-
-        /* ── ARTICLE WRAPPER ── */
-        .article-wrap {
-            max-width: 720px;
-            margin: 0 auto;
-            padding: 60px 40px 120px;
-        }
-
-        /* ── HEADER ── */
-        .article-kicker {
-            font-family: var(--sans);
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.2em;
-            text-transform: uppercase;
-            color: var(--accent);
-            margin-bottom: 16px;
-        }
-
-        h1.article-title {
-            font-family: var(--serif);
-            font-size: clamp(28px, 4vw, 42px);
-            font-weight: 600;
-            line-height: 1.25;
-            color: var(--ink);
-            margin-bottom: 20px;
-        }
-
-        .article-subtitle {
-            font-size: 19px;
-            font-style: italic;
-            color: var(--ink2);
-            line-height: 1.6;
-            margin-bottom: 28px;
-            border-left: 3px solid var(--accent);
-            padding-left: 18px;
-        }
-
-        .article-meta {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            font-family: var(--sans);
-            font-size: 13px;
-            color: var(--ink3);
-            padding-bottom: 28px;
-            border-bottom: 1px solid var(--rule);
-            margin-bottom: 40px;
-        }
-
-        .meta-dot {
-            width: 3px;
-            height: 3px;
-            border-radius: 50%;
-            background: var(--ink3);
-        }
-
-        .author-avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: var(--bg2);
-            border: 1px solid var(--rule);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: var(--sans);
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--ink2);
-        }
-
-        /* ── PROSE ── */
-        p {
-            margin-bottom: 24px;
-            color: var(--ink2);
-        }
-
-        p:first-of-type {
-            color: var(--ink);
-        }
-
-        h2 {
-            font-family: var(--serif);
-            font-size: 26px;
-            font-weight: 600;
-            color: var(--ink);
-            margin: 48px 0 16px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--rule);
-        }
-
-        h3 {
-            font-family: var(--sans);
-            font-size: 15px;
-            font-weight: 600;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: var(--ink);
-            margin: 32px 0 12px;
-        }
-
-        /* pull quote */
-        blockquote {
-            margin: 36px 0;
-            padding: 20px 24px;
-            border-left: 4px solid var(--accent);
-            background: var(--bg2);
-            border-radius: 0 6px 6px 0;
-            font-style: italic;
-            color: var(--ink);
-            font-size: 19px;
-            line-height: 1.65;
-        }
-
-        /* code */
-        code {
-            font-family: var(--mono);
-            font-size: 14px;
-            background: var(--code-bg);
-            border: 1px solid var(--rule);
-            border-radius: 4px;
-            padding: 2px 6px;
-            color: var(--accent);
-        }
-
-        pre {
-            background: #1e1e2e;
-            border-radius: 8px;
-            padding: 24px;
-            overflow-x: auto;
-            margin: 28px 0;
-            border: 1px solid #2a2a3a;
-        }
-
+           ARTICLE SPECIFIC & DIAGRAM STYLES
+           ══════════════════════════════════════ */
         pre code {
             background: none;
             border: none;
@@ -462,6 +167,8 @@
             margin: 24px 0;
             color: var(--ink);
             letter-spacing: 0.04em;
+            overflow-x: auto;
+            white-space: nowrap;
         }
 
         /* footnote / further reading */
@@ -489,15 +196,19 @@
             text-underline-offset: 3px;
         }
 
-        /* ── SECRET TRIGGER ──
-   Looks like an innocent "§" section marker in the byline.
-   Click it 3 times rapidly to open the chat modal.
-*/
+        /* ── SECRET TRIGGER ── */
         #secret-trigger {
             cursor: default;
+            /* Use pointer so it's tappable on iOS without being obvious */
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
             user-select: none;
             color: var(--ink3);
             font-size: 13px;
+            /* Larger tap area on mobile */
+            padding: 8px 4px;
+            margin: -8px -4px;
+            display: inline-block;
             transition: color 0.1s;
         }
 
@@ -505,19 +216,22 @@
             color: var(--accent);
         }
 
+
         /* ══════════════════════════════════════
-   CHAT MODAL OVERLAY
-══════════════════════════════════════ */
+           CHAT MODAL OVERLAY
+        ══════════════════════════════════════ */
         #chatOverlay {
             display: none;
             position: fixed;
             inset: 0;
+            /* Use safe-area insets so nothing hides behind notch/home bar */
+            padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left));
             background: rgba(26, 26, 26, 0.4);
             backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
             z-index: 1000;
             align-items: center;
             justify-content: center;
-            padding: 20px;
         }
 
         #chatOverlay.open {
@@ -531,6 +245,9 @@
             border-radius: 8px;
             width: 100%;
             max-width: 420px;
+            /* Scroll internally if viewport is tiny */
+            max-height: 100%;
+            overflow-y: auto;
             padding: 36px;
             position: relative;
             animation: modalIn 0.3s cubic-bezier(0.34, 1.2, 0.64, 1);
@@ -599,10 +316,17 @@
             border-radius: 4px;
             color: var(--ink);
             font-family: var(--mono);
-            font-size: 14px;
+            font-size: 16px;
+            /* 16px prevents iOS zoom-on-focus */
             padding: 12px 14px;
             outline: none;
+            /* Explicitly set box-sizing so width:100% works with padding */
+            box-sizing: border-box;
             transition: border-color 0.2s, box-shadow 0.2s;
+            /* Prevent iOS rounding inputs */
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 4px;
         }
 
         .mfield input:focus {
@@ -627,11 +351,15 @@
             letter-spacing: 0.2em;
             text-transform: uppercase;
             cursor: pointer;
+            /* Good touch target height */
+            min-height: 48px;
+            -webkit-tap-highlight-color: transparent;
             transition: background 0.2s, color 0.2s;
             margin-top: 8px;
         }
 
-        .mbtn:hover {
+        .mbtn:hover,
+        .mbtn:active {
             background: var(--accent);
             color: var(--bg);
         }
@@ -662,24 +390,34 @@
             font-size: 18px;
             cursor: pointer;
             line-height: 1;
-            padding: 4px 6px;
+            /* Larger touch target */
+            padding: 8px;
             border-radius: 4px;
+            -webkit-tap-highlight-color: transparent;
             transition: color 0.15s, background 0.15s;
         }
 
-        .modal-close:hover {
+        .modal-close:hover,
+        .modal-close:active {
             color: var(--ink);
             background: var(--bg2);
         }
 
-        /* ── CHAT FULLSCREEN ── */
+
+        /* ══════════════════════════════════════
+           CHAT FULLSCREEN
+        ══════════════════════════════════════ */
         #chatScreen {
             display: none;
             position: fixed;
             inset: 0;
+            /* dvh accounts for the collapsing mobile browser chrome */
+            height: 100dvh;
             background: var(--bg);
             flex-direction: column;
             z-index: 1001;
+            /* Prevent the whole screen from scrolling when keyboard opens */
+            overflow: hidden;
         }
 
         #chatScreen.open {
@@ -690,6 +428,8 @@
             background: var(--bg2);
             border-bottom: 1px solid var(--rule);
             padding: 14px 20px;
+            /* Respect top notch / Dynamic Island */
+            padding-top: calc(14px + env(safe-area-inset-top));
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -754,6 +494,8 @@
 
         .hbtn {
             padding: 7px 14px;
+            /* Minimum 44px touch target height */
+            min-height: 44px;
             background: transparent;
             border: 1px solid var(--accent);
             border-radius: 4px;
@@ -764,22 +506,30 @@
             letter-spacing: 0.15em;
             text-transform: uppercase;
             cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
             transition: background 0.2s, color 0.2s;
         }
 
-        .hbtn:hover {
+        .hbtn:hover,
+        .hbtn:active {
             background: var(--accent);
             color: var(--bg);
         }
 
+        /* Messages list */
         .messages {
             flex: 1;
             overflow-y: auto;
+            /* Smooth momentum scrolling on iOS */
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
             padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 10px;
             scroll-behavior: smooth;
+            /* Ensure it doesn't grow past available space */
+            min-height: 0;
         }
 
         .messages::-webkit-scrollbar {
@@ -820,6 +570,7 @@
             line-height: 1.5;
         }
 
+        /* Message bubbles */
         .msg {
             display: flex;
             flex-direction: column;
@@ -890,6 +641,17 @@
             color: var(--ink);
         }
 
+        /* Image Display within Bubble */
+        .msg-attached-img {
+            max-width: 100%;
+            max-height: 240px;
+            border-radius: 6px;
+            margin-top: 6px;
+            display: block;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.05);
+        }
+
         .msg-time {
             font-family: var(--mono);
             font-size: 9px;
@@ -907,6 +669,7 @@
             padding: 4px 0;
         }
 
+        /* Typing indicator */
         .typing-area {
             padding: 0 20px 8px;
             height: 24px;
@@ -926,7 +689,6 @@
         .typing-indicator.visible {
             display: flex;
         }
-
 
         .typing-dots span {
             display: inline-block;
@@ -950,22 +712,51 @@
             0%,
             60%,
             100% {
-                transform: translateY(0)
+                transform: translateY(0);
             }
 
             30% {
-                transform: translateY(-5px)
+                transform: translateY(-5px);
             }
         }
 
+        /* Input area */
         .input-area {
             padding: 14px 20px;
+            /* Respect the home indicator on iPhone */
+            padding-bottom: calc(14px + env(safe-area-inset-bottom));
+            padding-left: calc(20px + env(safe-area-inset-left));
+            padding-right: calc(20px + env(safe-area-inset-right));
             background: var(--bg2);
             border-top: 1px solid var(--rule);
             display: flex;
             gap: 10px;
             align-items: flex-end;
             flex-shrink: 0;
+        }
+
+        /* Photo attachment upload triggers */
+        .attach-btn {
+            background: none;
+            border: none;
+            color: var(--ink3);
+            font-size: 18px;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+            transition: color 0.15s, background 0.15s;
+            border-radius: 4px;
+        }
+
+        .attach-btn:hover,
+        .attach-btn:active {
+            color: var(--accent);
+            background: var(--bg);
         }
 
         #msgInput {
@@ -975,13 +766,19 @@
             border-radius: 4px;
             color: var(--ink);
             font-family: var(--sans);
-            font-size: 14px;
+            font-size: 16px;
+            /* 16px prevents auto-zoom on iOS */
             padding: 11px 14px;
             outline: none;
             resize: none;
             max-height: 120px;
             overflow-y: auto;
             line-height: 1.5;
+            box-sizing: border-box;
+            /* Prevent iOS rounding */
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 4px;
             transition: border-color 0.2s;
         }
 
@@ -998,41 +795,265 @@
             border: none;
             border-radius: 4px;
             color: var(--bg);
-            width: 42px;
-            height: 42px;
+            /* 44px minimum touch target (Apple HIG) */
+            width: 44px;
+            height: 44px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             font-size: 16px;
+            -webkit-tap-highlight-color: transparent;
             transition: opacity 0.2s;
+            /* Keep vertically centred with multiline textarea */
+            align-self: flex-end;
         }
 
-        #sendBtn:hover {
+        #sendBtn:hover,
+        #sendBtn:active {
             opacity: 0.82;
+        }
+
+
+        /* ══════════════════════════════════════
+           REPLY BUTTON — MOBILE SAFE
+           Key change: always visible on touch
+           devices; no hover-only opacity trick.
+        ══════════════════════════════════════ */
+        .msg-bubble-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            position: relative;
+        }
+
+        .msg-reply-btn {
+            background: transparent;
+            border: none;
+            color: var(--ink3);
+            cursor: pointer;
+            font-size: 14px;
+            /* 36×36 touch target; visually 24×24 via padding */
+            padding: 6px;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            flex-shrink: 0;
+            -webkit-tap-highlight-color: transparent;
+            transition: opacity 0.15s, color 0.15s, background 0.15s;
+        }
+
+        /*
+         * Desktop: fade out until hover.
+         * Touch / coarse-pointer: always visible at reduced opacity
+         * (so the button is always tappable without hovering first).
+         */
+        @media (hover: hover) and (pointer: fine) {
+
+            /* Fine pointer = real mouse → use the hover trick */
+            .msg-reply-btn {
+                opacity: 0;
+            }
+
+            .msg:hover .msg-reply-btn {
+                opacity: 1;
+            }
+        }
+
+        @media (hover: none),
+        (pointer: coarse) {
+
+            /* Touch device → always show at a subtle opacity */
+            .msg-reply-btn {
+                opacity: 0.45;
+            }
+
+            /* Bump opacity on active (tap) so feedback is clear */
+            .msg-reply-btn:active {
+                opacity: 1;
+            }
+        }
+
+        .msg-reply-btn:hover,
+        .msg-reply-btn:active {
+            color: var(--accent);
+            background: var(--bg2);
+            opacity: 1;
+        }
+
+        .msg.mine .msg-reply-btn {
+            order: -1;
+        }
+
+        /* left of bubble */
+        .msg.theirs .msg-reply-btn {
+            order: 1;
+        }
+
+        /* right of bubble */
+
+
+        /* Quote preview inside the bubble */
+        .msg-reply-quote {
+            background: rgba(0, 0, 0, 0.05);
+            border-left: 2px solid var(--accent);
+            padding: 6px 10px;
+            font-size: 11px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            opacity: 0.85;
+            /* Larger touch target for the quote tap */
+            min-height: 36px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+            transition: opacity 0.15s;
+            max-width: 100%;
+        }
+
+        .msg-reply-quote:hover,
+        .msg-reply-quote:active {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.08);
+        }
+
+        .msg.theirs .msg-reply-quote {
+            background: rgba(0, 0, 0, 0.04);
+            border-left-color: var(--accent2);
+        }
+
+        .msg-reply-quote-sender {
+            font-weight: 600;
+            font-family: var(--mono);
+            text-transform: uppercase;
+            font-size: 9px;
+            margin-bottom: 2px;
+            color: var(--accent);
+        }
+
+        .msg.theirs .msg-reply-quote-sender {
+            color: var(--accent2);
+        }
+
+        .msg-reply-quote-text {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+            color: var(--ink2);
+        }
+
+        /* Reply Preview Bar above input */
+        .reply-preview-bar {
+            display: none;
+            background: var(--bg3, var(--bg2));
+            border-top: 1px solid var(--rule);
+            padding: 8px 20px;
+            padding-left: calc(20px + env(safe-area-inset-left));
+            padding-right: calc(20px + env(safe-area-inset-right));
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-shrink: 0;
+            animation: slideUp 0.2s ease;
+        }
+
+        .reply-preview-bar.active {
+            display: flex;
+        }
+
+        .reply-preview-content {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-width: 0;
+            /* let it shrink properly in flex */
+        }
+
+        .reply-preview-label {
+            font-family: var(--mono);
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 2px;
+        }
+
+        .reply-preview-text {
+            font-size: 12px;
+            color: var(--ink2);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 260px;
+        }
+
+        .reply-preview-close {
+            background: none;
+            border: none;
+            color: var(--ink3);
+            font-size: 14px;
+            cursor: pointer;
+            /* Good touch target */
+            padding: 8px;
+            min-width: 36px;
+            min-height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 3px;
+            -webkit-tap-highlight-color: transparent;
+            flex-shrink: 0;
+            transition: color 0.15s, background 0.15s;
+        }
+
+        .reply-preview-close:hover,
+        .reply-preview-close:active {
+            color: var(--ink);
+            background: var(--bg2);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(8px);
+                opacity: 0;
+            }
+
+            to {
+                transform: none;
+                opacity: 1;
+            }
+        }
+
+        /* Flash highlight animation */
+        @keyframes flashHighlight {
+            0% {
+                background-color: var(--accent-light, rgba(181, 69, 27, 0.12));
+                border-color: var(--accent);
+            }
+
+            100% {}
+        }
+
+        .flash-highlight {
+            animation: flashHighlight 1.5s ease-out;
         }
 
         /* ── RESPONSIVE ── */
         @media (max-width: 600px) {
-            .article-wrap {
-                padding: 40px 20px 80px;
-            }
-
-            nav {
-                padding: 0 20px;
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .hamburger {
-                display: flex;
-            }
-
             .msg {
                 max-width: 88%;
+            }
+
+            .reply-preview-text {
+                max-width: 180px;
             }
         }
     </style>
@@ -1040,9 +1061,6 @@
 
 <body>
 
-    <!-- ══════════════════════════════════════
-     ML ARTICLE (the disguise)
-══════════════════════════════════════ -->
     <nav>
         <a class="nav-brand" href="index.html">ML <span>Digest</span></a>
         <ul class="nav-links">
@@ -1058,7 +1076,6 @@
         </div>
     </nav>
 
-    <!-- Mobile Menu Drawer -->
     <div class="mobile-menu" id="mobile-menu-drawer">
         <ul>
             <li><a href="archive.html?tag=Research">Research</a></li>
@@ -1070,78 +1087,84 @@
         </ul>
     </div>
 
-    <!-- Toggle drawer logic -->
     <script>
-        document.getElementById('hamburger-menu').addEventListener('click', function() {
+        document.getElementById('hamburger-menu').addEventListener('click', function () {
             this.classList.toggle('open');
             const drawer = document.getElementById('mobile-menu-drawer');
-            if (drawer.style.display === 'block') {
-                drawer.style.display = 'none';
-            } else {
-                drawer.style.display = 'block';
-            }
+            drawer.style.display = drawer.style.display === 'block' ? 'none' : 'block';
         });
     </script>
 
-    <div class="article-wrap">
-
-        <div class="article-kicker">Deep Learning · Architecture</div>
-
-        <h1 class="article-title">Attention Is All You Need: A Deep Dive into Transformer Architecture</h1>
-
-        <p class="article-subtitle">How a 2017 paper from Google Brain quietly dismantled thirty years of sequential
-            thinking in neural networks — and why that matters for everything from search to protein folding.</p>
-
-        <div class="article-meta">
-            <div class="author-avatar">AR</div>
-            <span>Arjun Rao</span>
-            <div class="meta-dot"></div>
-            <span>June 3, 2026</span>
-            <div class="meta-dot"></div>
-            <span>14 min read</span>
-            <div class="meta-dot"></div>
-            <!-- SECRET TRIGGER: click 3 times fast -->
-            <span id="secret-trigger" title="§">§</span>
+    <div class="article-container">
+        <div class="article-header">
+            <div class="hero-kicker">Deep Learning · Architecture</div>
+            <h1>Attention Is All You Need: A Deep Dive into Transformer Architecture</h1>
+            <p class="hero-desc" style="max-width: 100%; margin-bottom: 0;">How a 2017 paper from Google Brain quietly
+                dismantled thirty years of sequential thinking in neural networks — and why that matters for everything
+                from search to protein folding.</p>
+            <div class="article-header-meta">
+                <div class="hero-author-chip">
+                    <div class="hac-avatar">AR</div>
+                    <span>Arjun Rao</span>
+                </div>
+                <div class="hmeta-dot"></div>
+                <span>June 3, 2026</span>
+                <div class="hmeta-dot"></div>
+                <span>14 min read</span>
+                <div class="hmeta-dot"></div>
+                <span id="secret-trigger" title="§">§</span>
+            </div>
         </div>
 
-        <p>Before 2017, the dominant paradigm for sequence modelling was the recurrent neural network. RNNs — and their
-            more capable cousins, LSTMs and GRUs — processed sequences one token at a time, maintaining a hidden state
-            that tried to compress everything seen so far into a fixed-size vector. It worked. Up to a point.</p>
+        <div class="article-body">
 
-        <p>The fundamental limitation was gradient flow. In a sequence of 512 tokens, the gradient signal from the last
-            token has to travel backwards through 512 multiplicative operations to reach the first. By the time it
-            arrives, it has either vanished or exploded. Long-range dependencies — like resolving a pronoun three
-            paragraphs after its antecedent — were notoriously difficult to learn.</p>
+            <p>Before 2017, the dominant paradigm for sequence modelling was the recurrent neural network. RNNs — and
+                their
+                more capable cousins, LSTMs and GRUs — processed sequences one token at a time, maintaining a hidden
+                state
+                that tried to compress everything seen so far into a fixed-size vector. It worked. Up to a point.</p>
 
-        <blockquote>"The dominant sequence transduction models are based on complex recurrent or convolutional neural
-            networks. We propose a new simple network architecture, the Transformer, based solely on attention
-            mechanisms." — Vaswani et al., 2017</blockquote>
+            <p>The fundamental limitation was gradient flow. In a sequence of 512 tokens, the gradient signal from the
+                last
+                token has to travel backwards through 512 multiplicative operations to reach the first. By the time it
+                arrives, it has either vanished or exploded. Long-range dependencies — like resolving a pronoun three
+                paragraphs after its antecedent — were notoriously difficult to learn.</p>
 
-        <p>The Transformer discarded recurrence entirely. Instead, every token in a sequence attends directly to every
-            other token in a single operation. The path length between any two positions is constant: O(1) rather than
-            O(n). This simple change had consequences that are still being felt today.</p>
+            <blockquote>"The dominant sequence transduction models are based on complex recurrent or convolutional
+                neural
+                networks. We propose a new simple network architecture, the Transformer, based solely on attention
+                mechanisms." — Vaswani et al., 2017</blockquote>
 
-        <h2>The Anatomy of Attention</h2>
+            <p>The Transformer discarded recurrence entirely. Instead, every token in a sequence attends directly to
+                every
+                other token in a single operation. The path length between any two positions is constant: O(1) rather
+                than
+                O(n). This simple change had consequences that are still being felt today.</p>
 
-        <p>The core mechanism is scaled dot-product attention. Given a sequence of input vectors, you project each one
-            three times: into a query (<code>Q</code>), a key (<code>K</code>), and a value (<code>V</code>). The output
-            for each position is a weighted sum of all the values, where the weight is determined by the compatibility
-            between that position's query and every other position's key.</p>
+            <h2>The Anatomy of Attention</h2>
 
-        <div class="formula">Attention(Q, K, V) = softmax( QKᵀ / √dₖ ) · V</div>
+            <p>The core mechanism is scaled dot-product attention. Given a sequence of input vectors, you project each
+                one
+                three times: into a query (<code>Q</code>), a key (<code>K</code>), and a value (<code>V</code>). The
+                output
+                for each position is a weighted sum of all the values, where the weight is determined by the
+                compatibility
+                between that position's query and every other position's key.</p>
 
-        <p>The <code>√dₖ</code> scaling factor prevents the dot products from growing so large that they push the
-            softmax into regions of extremely small gradients. Without it, training becomes unstable in high dimensions.
-        </p>
+            <div class="formula">Attention(Q, K, V) = softmax( QKᵀ / √dₖ ) · V</div>
 
-        <h3>Multi-Head Attention</h3>
+            <p>The <code>√dₖ</code> scaling factor prevents the dot products from growing so large that they push the
+                softmax into regions of extremely small gradients. Without it, training becomes unstable in high
+                dimensions.</p>
 
-        <p>A single attention head learns one pattern of compatibility. Multi-head attention runs <code>h</code>
-            attention heads in parallel, each with its own learned projections, then concatenates and projects the
-            results. Each head can specialise: one might track syntactic agreement, another coreference, another
-            positional proximity.</p>
+            <h3>Multi-Head Attention</h3>
 
-        <pre><code><span class="tok-kw">def</span> <span class="tok-fn">multi_head_attention</span>(Q, K, V, h, d_model):
+            <p>A single attention head learns one pattern of compatibility. Multi-head attention runs <code>h</code>
+                attention heads in parallel, each with its own learned projections, then concatenates and projects the
+                results. Each head can specialise: one might track syntactic agreement, another coreference, another
+                positional proximity.</p>
+
+            <pre><code><span class="tok-kw">def</span> <span class="tok-fn">multi_head_attention</span>(Q, K, V, h, d_model):
     d_k = d_model // h
     heads = []
     <span class="tok-kw">for</span> i <span class="tok-kw">in</span> range(h):
@@ -1151,115 +1174,130 @@
         heads.append(attention(Q_i, K_i, V_i))
     <span class="tok-kw">return</span> concat(heads) @ W_o  <span class="tok-cmt"># project back to d_model</span></code></pre>
 
-        <figure>
-            <div class="fig-diagram">
-                <div class="arch-row">
-                    <div class="arch-box ab-gray">Output</div>
+            <figure>
+                <div class="fig-diagram">
+                    <div class="arch-row">
+                        <div class="arch-box ab-gray">Output</div>
+                    </div>
+                    <div class="arch-row"><span class="arch-arrow">↑</span></div>
+                    <div class="arch-row">
+                        <div class="arch-box ab-purple">Linear projection</div>
+                    </div>
+                    <div class="arch-row"><span class="arch-arrow">↑</span></div>
+                    <div class="arch-row" style="gap:6px">
+                        <div class="arch-box ab-blue">Head 1</div>
+                        <div class="arch-box ab-blue">Head 2</div>
+                        <div class="arch-box ab-blue">…</div>
+                        <div class="arch-box ab-blue">Head h</div>
+                    </div>
+                    <div class="arch-row"><span class="arch-arrow">↑</span></div>
+                    <div class="arch-row" style="gap:6px">
+                        <div class="arch-box ab-green">Q</div>
+                        <div class="arch-box ab-amber">K</div>
+                        <div class="arch-box ab-green">V</div>
+                    </div>
                 </div>
-                <div class="arch-row"><span class="arch-arrow">↑</span></div>
-                <div class="arch-row">
-                    <div class="arch-box ab-purple">Linear projection</div>
-                </div>
-                <div class="arch-row"><span class="arch-arrow">↑</span></div>
-                <div class="arch-row" style="gap:6px">
-                    <div class="arch-box ab-blue">Head 1</div>
-                    <div class="arch-box ab-blue">Head 2</div>
-                    <div class="arch-box ab-blue">…</div>
-                    <div class="arch-box ab-blue">Head h</div>
-                </div>
-                <div class="arch-row"><span class="arch-arrow">↑</span></div>
-                <div class="arch-row" style="gap:6px">
-                    <div class="arch-box ab-green">Q</div>
-                    <div class="arch-box ab-amber">K</div>
-                    <div class="arch-box ab-green">V</div>
-                </div>
-            </div>
-            <figcaption><strong>Figure 1.</strong> Multi-head attention projects inputs into separate Q, K, V spaces for
-                each head, computes attention independently, then concatenates and projects.</figcaption>
-        </figure>
+                <figcaption><strong>Figure 1.</strong> Multi-head attention projects inputs into separate Q, K, V spaces
+                    for
+                    each head, computes attention independently, then concatenates and projects.</figcaption>
+            </figure>
 
-        <h2>Positional Encoding</h2>
+            <h2>Positional Encoding</h2>
 
-        <p>Attention is inherently permutation-invariant: shuffle the tokens and you get the same attention weights
-            (just reordered). That's a problem for language, where word order is everything. The Transformer injects
-            positional information by adding a sinusoidal encoding to each token embedding before the first layer.</p>
+            <p>Attention is inherently permutation-invariant: shuffle the tokens and you get the same attention weights
+                (just reordered). That's a problem for language, where word order is everything. The Transformer injects
+                positional information by adding a sinusoidal encoding to each token embedding before the first layer.
+            </p>
 
-        <div class="formula">PE(pos, 2i) = sin(pos / 10000^(2i/d_model))<br>PE(pos, 2i+1) = cos(pos /
-            10000^(2i/d_model))</div>
+            <div class="formula">PE(pos, 2i) = sin(pos / 10000^(2i/d_model))<br>PE(pos, 2i+1) = cos(pos /
+                10000^(2i/d_model))</div>
 
-        <p>The sinusoidal design was chosen so that relative positions could be represented as a linear function of the
-            encodings — allowing the model to generalise to sequences longer than those seen during training. Modern
-            models typically replace this with learned positional embeddings or rotary position encodings (RoPE).</p>
+            <p>The sinusoidal design was chosen so that relative positions could be represented as a linear function of
+                the
+                encodings — allowing the model to generalise to sequences longer than those seen during training. Modern
+                models typically replace this with learned positional embeddings or rotary position encodings (RoPE).
+            </p>
 
-        <h2>The Full Encoder-Decoder Stack</h2>
+            <h2>The Full Encoder-Decoder Stack</h2>
 
-        <p>The original Transformer was designed for sequence-to-sequence tasks like machine translation. The encoder
-            processes the source sequence into contextualised representations. The decoder generates the target sequence
-            autoregressively, attending both to its own previous outputs and to the encoder's output via
-            cross-attention.</p>
+            <p>The original Transformer was designed for sequence-to-sequence tasks like machine translation. The
+                encoder
+                processes the source sequence into contextualised representations. The decoder generates the target
+                sequence
+                autoregressively, attending both to its own previous outputs and to the encoder's output via
+                cross-attention.</p>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Component</th>
-                    <th>Inputs</th>
-                    <th>Key operation</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Encoder self-attention</td>
-                    <td>Source tokens</td>
-                    <td>Each token attends to all source tokens</td>
-                </tr>
-                <tr>
-                    <td>Decoder self-attention</td>
-                    <td>Target tokens (masked)</td>
-                    <td>Each token attends to previous target tokens only</td>
-                </tr>
-                <tr>
-                    <td>Cross-attention</td>
-                    <td>Decoder + Encoder output</td>
-                    <td>Target tokens attend to all source representations</td>
-                </tr>
-                <tr>
-                    <td>Feed-forward</td>
-                    <td>Attention output</td>
-                    <td>Two linear layers with ReLU, applied position-wise</td>
-                </tr>
-            </tbody>
-        </table>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Inputs</th>
+                        <th>Key operation</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Encoder self-attention</td>
+                        <td>Source tokens</td>
+                        <td>Each token attends to all source tokens</td>
+                    </tr>
+                    <tr>
+                        <td>Decoder self-attention</td>
+                        <td>Target tokens (masked)</td>
+                        <td>Each token attends to previous target tokens only</td>
+                    </tr>
+                    <tr>
+                        <td>Cross-attention</td>
+                        <td>Decoder + Encoder output</td>
+                        <td>Target tokens attend to all source representations</td>
+                    </tr>
+                    <tr>
+                        <td>Feed-forward</td>
+                        <td>Attention output</td>
+                        <td>Two linear layers with ReLU, applied position-wise</td>
+                    </tr>
+                </tbody>
+            </table>
 
-        <p>Each sub-layer is wrapped in a residual connection followed by layer normalisation. This is the "Add & Norm"
-            pattern you'll see in every Transformer diagram. The residual connections are critical: they provide a
-            gradient highway that bypasses each sub-layer and makes training deep stacks feasible.</p>
+            <p>Each sub-layer is wrapped in a residual connection followed by layer normalisation. This is the "Add &
+                Norm"
+                pattern you'll see in every Transformer diagram. The residual connections are critical: they provide a
+                gradient highway that bypasses each sub-layer and makes training deep stacks feasible.</p>
 
-        <h2>Why It Generalised So Far</h2>
+            <h2>Why It Generalised So Far</h2>
 
-        <p>It's worth pausing to ask why a machine translation architecture became the foundation of everything from GPT
-            to AlphaFold. The answer is that the Transformer's inductive biases are remarkably weak. Unlike CNNs (which
-            assume spatial locality) or RNNs (which assume temporal ordering), the Transformer makes no strong
-            assumption about the structure of its input. It will happily learn whatever patterns exist in the training
-            data — syntactic, semantic, structural, or otherwise.</p>
+            <p>It's worth pausing to ask why a machine translation architecture became the foundation of everything from
+                GPT
+                to AlphaFold. The answer is that the Transformer's inductive biases are remarkably weak. Unlike CNNs
+                (which
+                assume spatial locality) or RNNs (which assume temporal ordering), the Transformer makes no strong
+                assumption about the structure of its input. It will happily learn whatever patterns exist in the
+                training
+                data — syntactic, semantic, structural, or otherwise.</p>
 
-        <p>This generality, combined with the parallelism that makes large-scale training feasible, is why BERT
-            (encoder-only), GPT (decoder-only), and T5 (encoder-decoder) all converged on the same core architecture.
-            The innovations since 2017 — flash attention, rotary embeddings, grouped query attention, mixture of experts
-            — are optimisations on top of a structure that has remained essentially unchanged.</p>
+            <p>This generality, combined with the parallelism that makes large-scale training feasible, is why BERT
+                (encoder-only), GPT (decoder-only), and T5 (encoder-decoder) all converged on the same core
+                architecture.
+                The innovations since 2017 — flash attention, rotary embeddings, grouped query attention, mixture of
+                experts
+                — are optimisations on top of a structure that has remained essentially unchanged.</p>
 
-        <blockquote>"We are still largely running the 2017 architecture. We've made it much bigger, much faster, and
-            much cheaper — but the core attention mechanism is the same eight lines of matrix algebra." — unnamed
-            researcher, NeurIPS 2024 panel</blockquote>
+            <blockquote>"We are still largely running the 2017 architecture. We've made it much bigger, much faster, and
+                much cheaper — but the core attention mechanism is the same eight lines of matrix algebra." — unnamed
+                researcher, NeurIPS 2024 panel</blockquote>
 
-        <h2>Implementation Notes</h2>
+            <h2>Implementation Notes</h2>
 
-        <p>If you're implementing a Transformer from scratch, a few things trip people up that the paper glosses over.
-            First, the learning rate schedule matters enormously — the original paper uses a warmup followed by inverse
-            square root decay, and deviating from this often causes divergence. Second, weight tying between the
-            embedding and the final linear layer is standard in language models and saves a significant fraction of
-            parameters. Third, the feed-forward dimension is typically 4× the model dimension, not the same size.</p>
+            <p>If you're implementing a Transformer from scratch, a few things trip people up that the paper glosses
+                over.
+                First, the learning rate schedule matters enormously — the original paper uses a warmup followed by
+                inverse
+                square root decay, and deviating from this often causes divergence. Second, weight tying between the
+                embedding and the final linear layer is standard in language models and saves a significant fraction of
+                parameters. Third, the feed-forward dimension is typically 4× the model dimension, not the same size.
+            </p>
 
-        <pre><code><span class="tok-kw">class</span> <span class="tok-fn">TransformerBlock</span>(nn.Module):
+            <pre><code><span class="tok-kw">class</span> <span class="tok-fn">TransformerBlock</span>(nn.Module):
     <span class="tok-kw">def</span> <span class="tok-fn">__init__</span>(self, d_model, n_heads, d_ff, dropout=<span class="tok-num">0.1</span>):
         self.attn = MultiHeadAttention(d_model, n_heads)
         self.ff   = FeedForward(d_model, d_ff)
@@ -1272,30 +1310,27 @@
         x = x + self.drop(self.ff(self.ln2(x)))
         <span class="tok-kw">return</span> x</code></pre>
 
-        <p>Note the pre-norm variant shown above — applying layer norm before each sub-layer rather than after. Most
-            modern implementations (GPT-2 onward) use pre-norm because it stabilises training at large scale, even
-            though the original paper used post-norm.</p>
+            <p>Note the pre-norm variant shown above — applying layer norm before each sub-layer rather than after. Most
+                modern implementations (GPT-2 onward) use pre-norm because it stabilises training at large scale, even
+                though the original paper used post-norm.</p>
 
-        <div class="further">
-            <h3>Further Reading</h3>
-            <ol>
-                <li>Vaswani et al. (2017). <a href="#">Attention Is All You Need.</a> NeurIPS.</li>
-                <li>Devlin et al. (2018). <a href="#">BERT: Pre-training of Deep Bidirectional Transformers.</a> NAACL.
-                </li>
-                <li>Su et al. (2021). <a href="#">RoFormer: Enhanced Transformer with Rotary Position Embedding.</a>
-                    arXiv.</li>
-                <li>Dao et al. (2022). <a href="#">FlashAttention: Fast and Memory-Efficient Exact Attention.</a>
-                    NeurIPS.</li>
-                <li>Hoffmann et al. (2022). <a href="#">Training Compute-Optimal Large Language Models.</a> arXiv.</li>
-            </ol>
+            <div class="further">
+                <h3>Further Reading</h3>
+                <ol>
+                    <li>Vaswani et al. (2017). <a href="#">Attention Is All You Need.</a> NeurIPS.</li>
+                    <li>Devlin et al. (2018). <a href="#">BERT: Pre-training of Deep Bidirectional Transformers.</a>
+                        NAACL.</li>
+                    <li>Su et al. (2021). <a href="#">RoFormer: Enhanced Transformer with Rotary Position Embedding.</a>
+                        arXiv.</li>
+                    <li>Dao et al. (2022). <a href="#">FlashAttention: Fast and Memory-Efficient Exact Attention.</a>
+                        NeurIPS.</li>
+                    <li>Hoffmann et al. (2022). <a href="#">Training Compute-Optimal Large Language Models.</a> arXiv.
+                    </li>
+                </ol>
+            </div>
+
         </div>
-
-    </div><!-- /article-wrap -->
-
-
-    <!-- ══════════════════════════════════════
-     CHAT LOGIN MODAL (hidden)
-══════════════════════════════════════ -->
+    </div>
     <div id="chatOverlay">
         <div id="loginModal">
             <button class="modal-close" onclick="closeModal()">✕</button>
@@ -1305,11 +1340,12 @@
             <div class="mfield">
                 <label>Your Name</label>
                 <input id="usernameInput" type="text" maxlength="20" placeholder="e.g. Alice" autocomplete="off"
-                    spellcheck="false">
+                    spellcheck="false" autocorrect="off" autocapitalize="none">
             </div>
             <div class="mfield">
                 <label>Room Password</label>
-                <input id="passwordInput" type="password" placeholder="shared secret" autocomplete="off">
+                <input id="passwordInput" type="password" placeholder="shared secret" autocomplete="off"
+                    autocorrect="off">
             </div>
 
             <button class="mbtn" onclick="joinRoom()">ENTER ROOM →</button>
@@ -1318,9 +1354,6 @@
     </div>
 
 
-    <!-- ══════════════════════════════════════
-     CHAT SCREEN (fullscreen, hidden)
-══════════════════════════════════════ -->
     <div id="chatScreen">
         <div class="chat-header">
             <div class="chat-title-group">
@@ -1357,17 +1390,42 @@
             </div>
         </div>
 
+        <div id="replyPreview" class="reply-preview-bar">
+            <div class="reply-preview-content">
+                <span class="reply-preview-label" id="replyLabel">Replying to</span>
+                <span class="reply-preview-text" id="replyText">Message snippet</span>
+            </div>
+            <button class="reply-preview-close" onclick="cancelReply()">✕</button>
+        </div>
+
+        <div id="imagePreviewBar" class="reply-preview-bar"
+            style="border-top: 1px solid var(--rule); background: var(--bg2);">
+            <div class="reply-preview-content">
+                <span class="reply-preview-label" style="color: #166534;">📷 Image Attached</span>
+                <span class="reply-preview-text" id="imagePreviewName"
+                    style="font-family: var(--mono); font-size: 11px;">No file selected</span>
+            </div>
+            <button class="reply-preview-close" onclick="clearSelectedImage()">✕</button>
+        </div>
+
         <div class="input-area">
-            <textarea id="msgInput" rows="1" placeholder="Type a message… (Enter to send, Shift+Enter for newline)"
-                maxlength="2000"></textarea>
+            <input type="file" id="imageAttachmentInput" accept="image/*" style="display: none;">
+
+            <button class="attach-btn" id="attachBtn" onclick="triggerImageSelect()" aria-label="Attach Image">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+                    </path>
+                </svg>
+            </button>
+
+            <textarea id="msgInput" rows="1" placeholder="Message… (Enter to send)" maxlength="2000"></textarea>
             <button id="sendBtn" onclick="sendMessage()">↑</button>
         </div>
     </div>
 
 
-    <!-- ══════════════════════════════════════
-     FIREBASE + CHAT LOGIC
-══════════════════════════════════════ -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import {
@@ -1407,7 +1465,7 @@
             } catch { return null; }
         }
 
-        // ── Firebase config (hardcoded) ──
+        // ── Firebase config ──
         const FIREBASE_CONFIG = {
             dbUrl: 'https://shortner-d314e-default-rtdb.asia-southeast1.firebasedatabase.app/',
             apiKey: 'AIzaSyAGxY5Vs-gG-o1S-HYF4intZoVUeLCTR_o',
@@ -1420,16 +1478,24 @@
         let myName = '', myHandle = '', roomPassword = '', roomId = '';
         let typingTimeout;
         let seenMsgIds = new Set();
+        let decryptedMessages = {};
+        let replyingTo = null;
+        let attachedImageBase64 = null;
 
-        // Init firebase immediately
+        // Init Firebase immediately
         (function () {
             try {
-                app = initializeApp({ apiKey: FIREBASE_CONFIG.apiKey, databaseURL: FIREBASE_CONFIG.dbUrl, projectId: FIREBASE_CONFIG.projectId, appId: FIREBASE_CONFIG.appId }, 'secureroom');
+                app = initializeApp({
+                    apiKey: FIREBASE_CONFIG.apiKey,
+                    databaseURL: FIREBASE_CONFIG.dbUrl,
+                    projectId: FIREBASE_CONFIG.projectId,
+                    appId: FIREBASE_CONFIG.appId
+                }, 'secureroom');
                 db = getDatabase(app);
             } catch (e) { if (e.code !== 'app/duplicate-app') console.error(e); }
         })();
 
-        // ── Secret trigger (click § 3 times within 1.5s) ──
+        // ── Secret trigger: click/tap § 3 times within 1.5 s ──
         let clickCount = 0, clickTimer;
         document.getElementById('secret-trigger').addEventListener('click', () => {
             clickCount++;
@@ -1449,16 +1515,15 @@
 
         function openModal() {
             document.getElementById('chatOverlay').classList.add('open');
-            setTimeout(() => document.getElementById('usernameInput').focus(), 100);
+            // Delay focus slightly so the keyboard doesn't open before the modal animates in on mobile
+            setTimeout(() => document.getElementById('usernameInput').focus(), 300);
         }
         window.closeModal = function () {
             document.getElementById('chatOverlay').classList.remove('open');
         };
-        // close on overlay click
         document.getElementById('chatOverlay').addEventListener('click', function (e) {
             if (e.target === this) closeModal();
         });
-        // close on Escape
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
         // ── Join Room ──
@@ -1487,7 +1552,7 @@
             document.getElementById('roomTitle').textContent = 'Room #' + roomId.substring(0, 6).toUpperCase();
             document.getElementById('myNameLabel').textContent = myName;
 
-            // presence watcher
+            // Presence watcher
             onValue(ref(db, `rooms/${roomId}/presence`), snap => {
                 const data = snap.val() || {};
                 const others = Object.entries(data).filter(([k]) => k !== myHandle);
@@ -1502,7 +1567,7 @@
                 }
             });
 
-            // typing watcher
+            // Typing watcher
             onValue(ref(db, `rooms/${roomId}/typing`), snap => {
                 const data = snap.val() || {};
                 const others = Object.entries(data).filter(([k, v]) => k !== myHandle && v === true);
@@ -1517,21 +1582,89 @@
                 }
             });
 
-            // message watcher
+            // Message watcher
             onChildAdded(messagesRef, async snap => {
                 const id = snap.key;
                 if (seenMsgIds.has(id)) return;
                 seenMsgIds.add(id);
                 const d = snap.val();
+
                 const text = await decrypt(d.text, roomPassword);
                 const sender = await decrypt(d.sender, roomPassword);
-                if (!text || !sender) return;
+                if (!text && !d.img) return; // Allow image-only messages safely
+                if (!sender) return;
+
+                // Handle optional encrypted image block
+                let decryptedImg = null;
+                if (d.img) {
+                    decryptedImg = await decrypt(d.img, roomPassword);
+                }
+
+                decryptedMessages[id] = { sender, text: text || "[Image]" };
+
+                let replyData = null;
+                if (d.replyToId && d.replyToSender && d.replyToText) {
+                    const rSender = await decrypt(d.replyToSender, roomPassword);
+                    const rText = await decrypt(d.replyToText, roomPassword);
+                    if (rSender && rText) replyData = { id: d.replyToId, sender: rSender, text: rText };
+                }
+
                 hideEmpty();
-                appendMsg(sender, text, d.ts, sender === myName);
+                appendMsg(id, sender, text, d.ts, sender === myName, replyData, decryptedImg);
             });
 
             document.getElementById('chatOverlay').classList.remove('open');
             document.getElementById('chatScreen').classList.add('open');
+            // Small delay so the screen is rendered before we try to focus
+            setTimeout(() => document.getElementById('msgInput').focus(), 100);
+        };
+
+        // ── Attachment handling ──
+        window.triggerImageSelect = function () {
+            document.getElementById('imageAttachmentInput').click();
+        };
+
+        document.getElementById('imageAttachmentInput').addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Enforce basic size safeguard (e.g., ~1.5MB max to protect RTB limits)
+            if (file.size > 1572864) {
+                alert("Image is too large. Please select an image under 1.5MB.");
+                this.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                attachedImageBase64 = event.target.result;
+                document.getElementById('imagePreviewName').textContent = file.name;
+                document.getElementById('imagePreviewBar').classList.add('active');
+            };
+            reader.readAsDataURL(file);
+        });
+
+        window.clearSelectedImage = function () {
+            attachedImageBase64 = null;
+            document.getElementById('imageAttachmentInput').value = '';
+            document.getElementById('imagePreviewBar').classList.remove('active');
+        };
+
+        // ── Set Reply ──
+        window.setReply = function (id) {
+            const msg = decryptedMessages[id];
+            if (!msg) return;
+            replyingTo = { id, sender: msg.sender, text: msg.text };
+
+            document.getElementById('replyLabel').textContent = 'Replying to ' + msg.sender;
+            document.getElementById('replyText').textContent = msg.text;
+            document.getElementById('replyPreview').classList.add('active');
+            document.getElementById('msgInput').focus();
+        };
+
+        window.cancelReply = function () {
+            replyingTo = null;
+            document.getElementById('replyPreview').classList.remove('active');
             document.getElementById('msgInput').focus();
         };
 
@@ -1539,27 +1672,94 @@
         window.sendMessage = async function () {
             const input = document.getElementById('msgInput');
             const text = input.value.trim();
-            if (!text || !messagesRef) return;
-            await push(messagesRef, {
-                text: await encrypt(text, roomPassword),
+
+            // Allow sending if there is text OR an image attachment
+            if ((!text && !attachedImageBase64) || !messagesRef) return;
+
+            const payload = {
+                text: text ? await encrypt(text, roomPassword) : await encrypt('', roomPassword),
                 sender: await encrypt(myName, roomPassword),
                 ts: serverTimestamp()
-            });
+            };
+
+            // Securely encrypt image string before sending
+            if (attachedImageBase64) {
+                payload.img = await encrypt(attachedImageBase64, roomPassword);
+            }
+
+            if (replyingTo) {
+                payload.replyToId = replyingTo.id;
+                payload.replyToSender = await encrypt(replyingTo.sender, roomPassword);
+                payload.replyToText = await encrypt(replyingTo.text, roomPassword);
+            }
+
+            await push(messagesRef, payload);
+
             input.value = '';
             input.style.height = '';
+            cancelReply();
+            clearSelectedImage();
             clearTyping();
         };
 
-        // ── Append ──
-        function appendMsg(sender, text, ts, isMine) {
+        // ── Append message ──
+        function appendMsg(id, sender, text, ts, isMine, replyData, imgData) {
             const container = document.getElementById('messagesDiv');
             const div = document.createElement('div');
             div.className = `msg ${isMine ? 'mine' : 'theirs'}`;
-            const time = ts ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-            div.innerHTML = `<div class="msg-sender">${esc(sender)}</div><div class="msg-bubble">${esc(text).replace(/\n/g, '<br>')}</div><div class="msg-time">${time}</div>`;
+            div.id = `msg-${id}`;
+
+            const time = ts
+                ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                : '';
+
+            let quoteHtml = '';
+            if (replyData) {
+                quoteHtml = `
+                    <div class="msg-reply-quote" onclick="scrollToMessage('${replyData.id}')">
+                        <div class="msg-reply-quote-sender">${esc(replyData.sender)}</div>
+                        <div class="msg-reply-quote-text">${esc(replyData.text)}</div>
+                    </div>`;
+            }
+
+            // Optional image visual element construction
+            let imgHtml = '';
+            if (imgData) {
+                imgHtml = `<img src="${imgData}" class="msg-attached-img" alt="Encrypted attachment" />`;
+            }
+
+            // Hide bubble text container completely if there's no textual payload
+            let textHtml = text ? `<div class="msg-bubble-text">${esc(text).replace(/\n/g, '<br>')}</div>` : '';
+
+            div.innerHTML = `
+                <div class="msg-sender">${esc(sender)}</div>
+                <div class="msg-bubble-wrap">
+                    <div class="msg-bubble">
+                        ${quoteHtml}
+                        ${textHtml}
+                        ${imgHtml}
+                    </div>
+                    <button class="msg-reply-btn"
+                            onclick="setReply('${id}')"
+                            aria-label="Reply to this message">↩</button>
+                </div>
+                <div class="msg-time">${time}</div>`;
+
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
+
+        // ── Scroll-to with flash ──
+        window.scrollToMessage = function (msgId) {
+            const el = document.getElementById('msg-' + msgId);
+            if (!el) return;
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const bubble = el.querySelector('.msg-bubble');
+            if (bubble) {
+                bubble.classList.add('flash-highlight');
+                setTimeout(() => bubble.classList.remove('flash-highlight'), 1500);
+            }
+        };
 
         // ── Leave ──
         window.leaveRoom = function () {
@@ -1568,7 +1768,15 @@
             if (typingRef) remove(typingRef);
             messagesRef = presenceRef = typingRef = null;
             seenMsgIds.clear();
-            document.getElementById('messagesDiv').innerHTML = `<div class="empty-state" id="emptyState"><div class="empty-icon">💬</div><div class="empty-title">Room is ready</div><div class="empty-sub">Messages appear once both users are connected.</div></div>`;
+            decryptedMessages = {};
+            document.getElementById('messagesDiv').innerHTML = `
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">💬</div>
+                    <div class="empty-title">Room is ready</div>
+                    <div class="empty-sub">Messages appear once both users are connected.</div>
+                </div>`;
+            cancelReply();
+            clearSelectedImage();
             document.getElementById('chatScreen').classList.remove('open');
         };
 
@@ -1582,10 +1790,14 @@
             if (e) e.remove();
         }
         function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
-        function esc(s) { return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+        function esc(s) {
+            if (!s) return '';
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
 
-        // ── Input events ──
-        document.getElementById('msgInput').addEventListener('input', function () {
+        // ── Textarea auto-resize + typing indicator ──
+        const msgInput = document.getElementById('msgInput');
+        msgInput.addEventListener('input', function () {
             this.style.height = 'auto';
             this.style.height = Math.min(this.scrollHeight, 120) + 'px';
             if (typingRef) {
@@ -1594,10 +1806,27 @@
                 typingTimeout = setTimeout(() => { if (typingRef) set(typingRef, false); }, 2500);
             }
         });
-        document.getElementById('msgInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); window.sendMessage(); }
+
+        /*
+         * Key handling:
+         * - Desktop: Enter = send, Shift+Enter = newline
+         * - Mobile (soft keyboard): Enter on a <textarea> inserts a newline by default;
+         * we preserve that behaviour so users can compose multi-line messages naturally.
+         * They tap the ↑ send button to send.
+         */
+        msgInput.addEventListener('keydown', function (e) {
+            // Only intercept Enter on non-mobile / hardware keyboards
+            if (e.key === 'Enter' && !e.shiftKey) {
+                // pointer: fine = mouse attached → use keyboard shortcut
+                if (window.matchMedia('(pointer: fine)').matches) {
+                    e.preventDefault();
+                    window.sendMessage();
+                }
+                // On touch-only devices, let the browser insert a newline naturally
+            }
         });
-        // also allow Enter key in modal password field
+
+        // Enter on modal password field → join
         document.getElementById('passwordInput').addEventListener('keydown', function (e) {
             if (e.key === 'Enter') window.joinRoom();
         });
