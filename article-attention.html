@@ -123,8 +123,8 @@
            ══════════════════════════════════════ */
         #darkToggle {
             position: fixed;
-            bottom: calc(24px + env(safe-area-inset-bottom));
-            right: 20px;
+            top: calc(24px + env(safe-area-inset-top));
+            left: 20px;
             z-index: 1002;
             background: var(--bg2);
             border: 1px solid var(--rule);
@@ -137,7 +137,8 @@
             cursor: pointer;
             font-size: 18px;
             box-shadow: 0 2px 12px rgba(0,0,0,0.18);
-            transition: background 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+            transition: background 0.2s, border-color 0.2s,
+                        transform 0.15s, box-shadow 0.2s;
             -webkit-tap-highlight-color: transparent;
         }
         #darkToggle:hover, #darkToggle:active { transform: scale(1.1); box-shadow: 0 4px 16px rgba(0,0,0,0.24); }
