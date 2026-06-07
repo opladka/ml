@@ -1094,392 +1094,413 @@
 
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import {
-            getDatabase, ref, push, onChildAdded, set, onValue,
-            serverTimestamp, onDisconnect, remove
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import {
+        getDatabase, ref, push, onChildAdded, set, onValue,
+        serverTimestamp, onDisconnect, remove
+    } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-        // ── SHA-256 ──
-        async function sha256(msg) {
-            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
-            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-        }
+    // ── SHA-256 ──
+    async function sha256(msg) {
+        const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(msg));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
-        // ── AES-GCM ──
-        async function deriveKey(password) {
-            const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), { name: 'PBKDF2' }, false, ['deriveKey']);
-            return crypto.subtle.deriveKey(
-                { name: 'PBKDF2', salt: new TextEncoder().encode('secureroom-salt-v1'), iterations: 100000, hash: 'SHA-256' },
-                raw, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
-            );
-        }
-        async function encrypt(text, password) {
+    // ── AES-GCM ──
+    async function deriveKey(password) {
+        const raw = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), { name: 'PBKDF2' }, false, ['deriveKey']);
+        return crypto.subtle.deriveKey(
+            { name: 'PBKDF2', salt: new TextEncoder().encode('secureroom-salt-v1'), iterations: 100000, hash: 'SHA-256' },
+            raw, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+        );
+    }
+    async function encrypt(text, password) {
+        const key = await deriveKey(password);
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+        const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
+        const combined = new Uint8Array(iv.length + ct.byteLength);
+        combined.set(iv); combined.set(new Uint8Array(ct), iv.length);
+        return btoa(String.fromCharCode(...combined));
+    }
+    async function decrypt(b64, password) {
+        try {
+            const data = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+            const iv = data.slice(0, 12), ct = data.slice(12);
             const key = await deriveKey(password);
-            const iv = crypto.getRandomValues(new Uint8Array(12));
-            const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(text));
-            const combined = new Uint8Array(iv.length + ct.byteLength);
-            combined.set(iv); combined.set(new Uint8Array(ct), iv.length);
-            return btoa(String.fromCharCode(...combined));
-        }
-        async function decrypt(b64, password) {
-            try {
-                const data = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-                const iv = data.slice(0, 12), ct = data.slice(12);
-                const key = await deriveKey(password);
-                const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
-                return new TextDecoder().decode(pt);
-            } catch { return null; }
-        }
+            const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+            return new TextDecoder().decode(pt);
+        } catch { return null; }
+    }
 
-        // ── Firebase configuration ──
-        const FIREBASE_CONFIG = {
-            dbUrl:     'https://shortner-d314e-default-rtdb.asia-southeast1.firebasedatabase.app/',
-            apiKey:    'AIzaSyAGxY5Vs-gG-o1S-HYF4intZoVUeLCTR_o',
-            projectId: 'shortner-d314e',
-            appId:     '1:357954139303:web:330f10a18bd3cdf0b15782',
-        };
+    // ── Firebase configuration ──
+    const FIREBASE_CONFIG = {
+        dbUrl:     'https://shortner-d314e-default-rtdb.asia-southeast1.firebasedatabase.app/',
+        apiKey:    'AIzaSyAGxY5Vs-gG-o1S-HYF4intZoVUeLCTR_o',
+        projectId: 'shortner-d314e',
+        appId:     '1:357954139303:web:330f10a18bd3cdf0b15782',
+    };
 
-        // ── App Scope State ──
-        let db, app, messagesRef, presenceRef, typingRef;
-        let myName = '', myHandle = '', roomPassword = '', roomId = '';
-        let typingTimeout;
-        let seenMsgIds = new Set();
-        let decryptedMessages = {};
-        let replyingTo = null;
-        let attachedImageBase64 = null;
+    // ── App Scope State ──
+    let db, app, messagesRef, presenceRef, typingRef;
+    let myName = '', myHandle = '', roomPassword = '', roomId = '';
+    let typingTimeout;
+    let seenMsgIds = new Set();
+    let decryptedMessages = {};
+    let replyingTo = null;
+    let attachedImageBase64 = null;
 
-        // Establish core network connection immediately
-        (function () {
-            try {
-                app = initializeApp({
-                    apiKey:      FIREBASE_CONFIG.apiKey,
-                    databaseURL: FIREBASE_CONFIG.dbUrl,
-                    projectId:   FIREBASE_CONFIG.projectId,
-                    appId:       FIREBASE_CONFIG.appId
-                }, 'secureroom');
-                db = getDatabase(app);
-            } catch (e) { if (e.code !== 'app/duplicate-app') console.error(e); }
-        })();
+    // FIX: Store unsubscribe callbacks to prevent listener leaks
+    let unsubMessages = null;
+    let unsubPresence = null;
+    let unsubTyping  = null;
 
-        // ── Secret gateway handler ──
-        let clickCount = 0, clickTimer;
-        document.getElementById('secret-trigger').addEventListener('click', () => {
-            clickCount++;
-            document.getElementById('secret-trigger').classList.add('flash');
+    // FIX: Serialise async decryption so messages always render in delivery order
+    let decryptQueue = Promise.resolve();
+
+    // Establish core network connection immediately
+    (function () {
+        try {
+            app = initializeApp({
+                apiKey:      FIREBASE_CONFIG.apiKey,
+                databaseURL: FIREBASE_CONFIG.dbUrl,
+                projectId:   FIREBASE_CONFIG.projectId,
+                appId:       FIREBASE_CONFIG.appId
+            }, 'secureroom');
+            db = getDatabase(app);
+        } catch (e) { if (e.code !== 'app/duplicate-app') console.error(e); }
+    })();
+
+    // ── Teardown helper (called before every join AND on leave) ──
+    function detachListeners() {
+        if (unsubMessages) { unsubMessages(); unsubMessages = null; }
+        if (unsubPresence) { unsubPresence(); unsubPresence = null; }
+        if (unsubTyping)   { unsubTyping();   unsubTyping   = null; }
+        // Reset the ordering queue so stale async tasks don't bleed into the new session
+        decryptQueue = Promise.resolve();
+        seenMsgIds.clear();
+        decryptedMessages = {};
+    }
+
+    // ── Secret gateway handler ──
+    let clickCount = 0, clickTimer;
+    document.getElementById('secret-trigger').addEventListener('click', () => {
+        clickCount++;
+        document.getElementById('secret-trigger').classList.add('flash');
+        clearTimeout(clickTimer);
+        clickTimer = setTimeout(() => {
+            clickCount = 0;
+            document.getElementById('secret-trigger').classList.remove('flash');
+        }, 1500);
+        if (clickCount >= 3) {
+            clickCount = 0;
             clearTimeout(clickTimer);
-            clickTimer = setTimeout(() => {
-                clickCount = 0;
-                document.getElementById('secret-trigger').classList.remove('flash');
-            }, 1500);
-            if (clickCount >= 3) {
-                clickCount = 0;
-                clearTimeout(clickTimer);
-                document.getElementById('secret-trigger').classList.remove('flash');
-                openModal();
+            document.getElementById('secret-trigger').classList.remove('flash');
+            openModal();
+        }
+    });
+
+    function openModal() {
+        document.getElementById('chatOverlay').classList.add('open');
+        setTimeout(() => document.getElementById('usernameInput').focus(), 300);
+    }
+    window.closeModal = function () {
+        document.getElementById('chatOverlay').classList.remove('open');
+    };
+    document.getElementById('chatOverlay').addEventListener('click', function (e) {
+        if (e.target === this) closeModal();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+    // ── Lifecycle Room Authentication ──
+    window.joinRoom = async function () {
+        const un  = document.getElementById('usernameInput').value.trim();
+        const pw  = document.getElementById('passwordInput').value;
+        const err = document.getElementById('loginError');
+
+        if (!un)           { showErr(err, '✗ Enter your name.');                       return; }
+        if (pw.length < 6) { showErr(err, '✗ Password must be at least 6 characters.'); return; }
+        err.classList.remove('show');
+
+        // FIX: Always clean up any previous session's listeners before attaching new ones
+        detachListeners();
+
+        myName       = un;
+        myHandle     = un.substring(0, 16).replace(/[^a-zA-Z0-9_]/g, '_');
+        roomPassword = pw;
+        roomId       = (await sha256(pw)).substring(0, 20);
+
+        messagesRef = ref(db, `rooms/${roomId}/messages`);
+        presenceRef = ref(db, `rooms/${roomId}/presence/${myHandle}`);
+        typingRef   = ref(db, `rooms/${roomId}/typing/${myHandle}`);
+
+        await set(presenceRef, { name: myName, online: true, ts: serverTimestamp() });
+        onDisconnect(presenceRef).remove();
+        onDisconnect(typingRef).remove();
+
+        document.getElementById('roomTitle').textContent    = 'Room #' + roomId.substring(0, 6).toUpperCase();
+        document.getElementById('myNameLabel').textContent  = myName;
+
+        // FIX: Store unsubscribe handles for all three listeners
+        unsubPresence = onValue(ref(db, `rooms/${roomId}/presence`), snap => {
+            const data   = snap.val() || {};
+            const others = Object.entries(data).filter(([k]) => k !== myHandle);
+            const dot    = document.getElementById('theirDot');
+            const label  = document.getElementById('theirNameLabel');
+            if (others.length > 0) {
+                dot.className     = 'dot online';
+                label.textContent = others[0][1].name;
+            } else {
+                dot.className     = 'dot';
+                label.textContent = 'waiting...';
             }
         });
 
-        function openModal() {
-            document.getElementById('chatOverlay').classList.add('open');
-            setTimeout(() => document.getElementById('usernameInput').focus(), 300);
-        }
-        window.closeModal = function () {
-            document.getElementById('chatOverlay').classList.remove('open');
-        };
-        document.getElementById('chatOverlay').addEventListener('click', function (e) {
-            if (e.target === this) closeModal();
+        unsubTyping = onValue(ref(db, `rooms/${roomId}/typing`), snap => {
+            const data   = snap.val() || {};
+            const others = Object.entries(data).filter(([k, v]) => k !== myHandle && v === true);
+            const ti     = document.getElementById('typingIndicator');
+            const tl     = document.getElementById('typingLabel');
+            const other  = document.getElementById('theirNameLabel').textContent;
+            if (others.length > 0) {
+                tl.textContent = (other !== 'waiting...' ? other : 'Someone') + ' is typing…';
+                ti.classList.add('visible');
+            } else {
+                ti.classList.remove('visible');
+            }
         });
-        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-        // ── Lifecycle Room Authentication ──
-        window.joinRoom = async function () {
-            const un  = document.getElementById('usernameInput').value.trim();
-            const pw  = document.getElementById('passwordInput').value;
-            const err = document.getElementById('loginError');
+        // FIX: Chain each incoming message onto decryptQueue so they render in order
+        unsubMessages = onChildAdded(messagesRef, (snap) => {
+            const id = snap.key;
+            if (seenMsgIds.has(id)) return;
+            seenMsgIds.add(id);          // Reserve the ID immediately (sync) to block duplicates
+            const d = snap.val();
 
-            if (!un)          { showErr(err, '✗ Enter your name.');                    return; }
-            if (pw.length < 6){ showErr(err, '✗ Password must be at least 6 characters.'); return; }
-            err.classList.remove('show');
+            decryptQueue = decryptQueue.then(async () => {
+                // FIX: Decrypt all fields in parallel within this message, but messages
+                // themselves are processed sequentially via the queue chain
+                const [text, sender, decryptedImg] = await Promise.all([
+                    d.text ? decrypt(d.text, roomPassword) : Promise.resolve(''),
+                    decrypt(d.sender, roomPassword),
+                    d.img  ? decrypt(d.img,  roomPassword) : Promise.resolve(null),
+                ]);
 
-            myName    = un;
-            myHandle  = un.substring(0, 16).replace(/[^a-zA-Z0-9_]/g, '_');
-            roomPassword = pw;
-            roomId    = (await sha256(pw)).substring(0, 20);
+                if (!sender) return;            // Skip if sender can't be decrypted (wrong password)
+                if (!text && !decryptedImg) return;
 
-            messagesRef = ref(db, `rooms/${roomId}/messages`);
-            presenceRef = ref(db, `rooms/${roomId}/presence/${myHandle}`);
-            typingRef   = ref(db, `rooms/${roomId}/typing/${myHandle}`);
-
-            await set(presenceRef, { name: myName, online: true, ts: serverTimestamp() });
-            onDisconnect(presenceRef).remove();
-            onDisconnect(typingRef).remove();
-
-            document.getElementById('roomTitle').textContent = 'Room #' + roomId.substring(0, 6).toUpperCase();
-            document.getElementById('myNameLabel').textContent = myName;
-
-            // Online discovery sync loops
-            onValue(ref(db, `rooms/${roomId}/presence`), snap => {
-                const data   = snap.val() || {};
-                const others = Object.entries(data).filter(([k]) => k !== myHandle);
-                const dot    = document.getElementById('theirDot');
-                const label  = document.getElementById('theirNameLabel');
-                if (others.length > 0) {
-                    dot.className   = 'dot online';
-                    label.textContent = others[0][1].name;
-                } else {
-                    dot.className   = 'dot';
-                    label.textContent = 'waiting...';
-                }
-            });
-
-            // Activity status synchronisation logic
-            onValue(ref(db, `rooms/${roomId}/typing`), snap => {
-                const data   = snap.val() || {};
-                const others = Object.entries(data).filter(([k, v]) => k !== myHandle && v === true);
-                const ti     = document.getElementById('typingIndicator');
-                const tl     = document.getElementById('typingLabel');
-                const other  = document.getElementById('theirNameLabel').textContent;
-                if (others.length > 0) {
-                    tl.textContent = (other !== 'waiting...' ? other : 'Someone') + ' is typing…';
-                    ti.classList.add('visible');
-                } else {
-                    ti.classList.remove('visible');
-                }
-            });
-
-            // Incoming message event receiver engine
-            onChildAdded(messagesRef, async snap => {
-                const id = snap.key;
-                if (seenMsgIds.has(id)) return;
-                seenMsgIds.add(id);
-                const d = snap.val();
-
-                const text   = await decrypt(d.text,   roomPassword);
-                const sender = await decrypt(d.sender, roomPassword);
-                if (!text && !d.img) return; 
-                if (!sender) return;
-
-                // Securely decode encrypted media context blocks
-                let decryptedImg = null;
-                if (d.img) {
-                    decryptedImg = await decrypt(d.img, roomPassword);
-                }
-
-                decryptedMessages[id] = { sender, text: text || "[Image]" };
+                decryptedMessages[id] = { sender, text: text || '[Image]' };
 
                 let replyData = null;
                 if (d.replyToId && d.replyToSender && d.replyToText) {
-                    const rSender = await decrypt(d.replyToSender, roomPassword);
-                    const rText   = await decrypt(d.replyToText,   roomPassword);
+                    const [rSender, rText] = await Promise.all([
+                        decrypt(d.replyToSender, roomPassword),
+                        decrypt(d.replyToText,   roomPassword),
+                    ]);
                     if (rSender && rText) replyData = { id: d.replyToId, sender: rSender, text: rText };
                 }
 
                 hideEmpty();
                 appendMsg(id, sender, text, d.ts, sender === myName, replyData, decryptedImg);
-            });
-
-            document.getElementById('chatOverlay').classList.remove('open');
-            document.getElementById('chatScreen').classList.add('open');
-            setTimeout(() => document.getElementById('msgInput').focus(), 100);
-        };
-
-        // ── Native attachment controllers ──
-        window.triggerImageSelect = function () {
-            document.getElementById('imageAttachmentInput').click();
-        };
-
-        document.getElementById('imageAttachmentInput').addEventListener('change', function (e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            // Impose safe ~1.5MB headroom boundary limits on base64 variants
-            if (file.size > 1572864) {
-                alert("Image is too large. Please select an image under 1.5MB.");
-                this.value = '';
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function (event) {
-                attachedImageBase64 = event.target.result;
-                document.getElementById('imagePreviewName').textContent = file.name;
-                document.getElementById('imagePreviewBar').classList.add('active');
-            };
-            reader.readAsDataURL(file);
+            }).catch(err => console.error('Message decrypt error:', err));
         });
 
-        window.clearSelectedImage = function () {
-            attachedImageBase64 = null;
-            document.getElementById('imageAttachmentInput').value = '';
-            document.getElementById('imagePreviewBar').classList.remove('active');
-        };
+        document.getElementById('chatOverlay').classList.remove('open');
+        document.getElementById('chatScreen').classList.add('open');
+        setTimeout(() => document.getElementById('msgInput').focus(), 100);
+    };
 
-        // ── Thread Reply Controls ──
-        window.setReply = function (id) {
-            const msg = decryptedMessages[id];
-            if (!msg) return;
-            replyingTo = { id, sender: msg.sender, text: msg.text };
+    // ── Native attachment controllers ──
+    window.triggerImageSelect = function () {
+        document.getElementById('imageAttachmentInput').click();
+    };
 
-            document.getElementById('replyLabel').textContent = 'Replying to ' + msg.sender;
-            document.getElementById('replyText').textContent  = msg.text;
-            document.getElementById('replyPreview').classList.add('active');
-            document.getElementById('msgInput').focus();
-        };
+    document.getElementById('imageAttachmentInput').addEventListener('change', function (e) {
+        const file = e.target.files[0];
+        if (!file) return;
 
-        window.cancelReply = function () {
-            replyingTo = null;
-            document.getElementById('replyPreview').classList.remove('active');
-            document.getElementById('msgInput').focus();
-        };
-
-        // ── Message Transmit Handler ──
-        window.sendMessage = async function () {
-            const input = document.getElementById('msgInput');
-            const text  = input.value.trim();
-            
-            if ((!text && !attachedImageBase64) || !messagesRef) return;
-
-            const payload = {
-                text:   text ? await encrypt(text, roomPassword) : await encrypt('', roomPassword),
-                sender: await encrypt(myName, roomPassword),
-                ts: serverTimestamp()
-            };
-
-            // Inject local symmetric crypto transformation layer for attachment buffers
-            if (attachedImageBase64) {
-                payload.img = await encrypt(attachedImageBase64, roomPassword);
-            }
-
-            if (replyingTo) {
-                payload.replyToId     = replyingTo.id;
-                payload.replyToSender = await encrypt(replyingTo.sender, roomPassword);
-                payload.replyToText   = await encrypt(replyingTo.text,   roomPassword);
-            }
-
-            await push(messagesRef, payload);
-
-            input.value = '';
-            input.style.height = '';
-            cancelReply();
-            clearSelectedImage();
-            clearTyping();
-        };
-
-        // ── DOM Insertion & Presentation Layout Engine ──
-        function appendMsg(id, sender, text, ts, isMine, replyData, imgData) {
-            const container = document.getElementById('messagesDiv');
-            const div       = document.createElement('div');
-            div.className   = `msg ${isMine ? 'mine' : 'theirs'}`;
-            div.id          = `msg-${id}`;
-
-            const time = ts
-                ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : '';
-
-            let quoteHtml = '';
-            if (replyData) {
-                quoteHtml = `
-                    <div class="msg-reply-quote" onclick="scrollToMessage('${replyData.id}')">
-                        <div class="msg-reply-quote-sender">${esc(replyData.sender)}</div>
-                        <div class="msg-reply-quote-text">${esc(replyData.text)}</div>
-                    </div>`;
-            }
-
-            let imgHtml = '';
-            if (imgData) {
-                imgHtml = `<img src="${imgData}" class="msg-attached-img" alt="Encrypted attachment" />`;
-            }
-
-            let textHtml = text ? `<div class="msg-bubble-text">${esc(text).replace(/\n/g, '<br>')}</div>` : '';
-
-            div.innerHTML = `
-                <div class="msg-sender">${esc(sender)}</div>
-                <div class="msg-bubble-wrap">
-                    <div class="msg-bubble">
-                        ${quoteHtml}
-                        ${textHtml}
-                        ${imgHtml}
-                    </div>
-                    <button class="msg-reply-btn"
-                            onclick="setReply('${id}')"
-                            aria-label="Reply to this message">↩</button>
-                </div>
-                <div class="msg-time">${time}</div>`;
-
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+        if (file.size > 1572864) {
+            alert("Image is too large. Please select an image under 1.5MB.");
+            this.value = '';
+            return;
         }
 
-        window.scrollToMessage = function (msgId) {
-            const el = document.getElementById('msg-' + msgId);
-            if (!el) return;
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const bubble = el.querySelector('.msg-bubble');
-            if (bubble) {
-                bubble.classList.add('flash-highlight');
-                setTimeout(() => bubble.classList.remove('flash-highlight'), 1500);
-            }
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            attachedImageBase64 = event.target.result;
+            document.getElementById('imagePreviewName').textContent = file.name;
+            document.getElementById('imagePreviewBar').classList.add('active');
+        };
+        reader.readAsDataURL(file);
+    });
+
+    window.clearSelectedImage = function () {
+        attachedImageBase64 = null;
+        document.getElementById('imageAttachmentInput').value = '';
+        document.getElementById('imagePreviewBar').classList.remove('active');
+    };
+
+    // ── Thread Reply Controls ──
+    window.setReply = function (id) {
+        const msg = decryptedMessages[id];
+        if (!msg) return;
+        replyingTo = { id, sender: msg.sender, text: msg.text };
+
+        document.getElementById('replyLabel').textContent = 'Replying to ' + msg.sender;
+        document.getElementById('replyText').textContent  = msg.text;
+        document.getElementById('replyPreview').classList.add('active');
+        document.getElementById('msgInput').focus();
+    };
+
+    window.cancelReply = function () {
+        replyingTo = null;
+        document.getElementById('replyPreview').classList.remove('active');
+        document.getElementById('msgInput').focus();
+    };
+
+    // ── Message Transmit Handler ──
+    window.sendMessage = async function () {
+        const input = document.getElementById('msgInput');
+        const text  = input.value.trim();
+
+        if ((!text && !attachedImageBase64) || !messagesRef) return;
+
+        const payload = {
+            text:   text ? await encrypt(text, roomPassword) : await encrypt('', roomPassword),
+            sender: await encrypt(myName, roomPassword),
+            ts: serverTimestamp()
         };
 
-        // ── Session Teardown Cleanups ──
-        window.leaveRoom = function () {
-            if (!confirm('Leave the room?')) return;
-            if (presenceRef) remove(presenceRef);
-            if (typingRef)   remove(typingRef);
-            messagesRef = presenceRef = typingRef = null;
-            seenMsgIds.clear();
-            decryptedMessages = {};
-            document.getElementById('messagesDiv').innerHTML = `
-                <div class="empty-state" id="emptyState">
-                    <div class="empty-icon">💬</div>
-                    <div class="empty-title">Room is ready</div>
-                    <div class="empty-sub">Messages appear once both users are connected.</div>
+        if (attachedImageBase64) {
+            payload.img = await encrypt(attachedImageBase64, roomPassword);
+        }
+
+        if (replyingTo) {
+            payload.replyToId     = replyingTo.id;
+            payload.replyToSender = await encrypt(replyingTo.sender, roomPassword);
+            payload.replyToText   = await encrypt(replyingTo.text,   roomPassword);
+        }
+
+        await push(messagesRef, payload);
+
+        input.value = '';
+        input.style.height = '';
+        cancelReply();
+        clearSelectedImage();
+        clearTyping();
+    };
+
+    // ── DOM Insertion & Presentation Layout Engine ──
+    function appendMsg(id, sender, text, ts, isMine, replyData, imgData) {
+        const container = document.getElementById('messagesDiv');
+        const div       = document.createElement('div');
+        div.className   = `msg ${isMine ? 'mine' : 'theirs'}`;
+        div.id          = `msg-${id}`;
+
+        const time = ts
+            ? new Date(ts).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '';
+
+        let quoteHtml = '';
+        if (replyData) {
+            quoteHtml = `
+                <div class="msg-reply-quote" onclick="scrollToMessage('${replyData.id}')">
+                    <div class="msg-reply-quote-sender">${esc(replyData.sender)}</div>
+                    <div class="msg-reply-quote-text">${esc(replyData.text)}</div>
                 </div>`;
-            cancelReply();
-            clearSelectedImage();
-            document.getElementById('chatScreen').classList.remove('open');
-        };
+        }
 
-        // ── Auxiliary Helpers ──
-        function clearTyping() {
+        let imgHtml  = imgData ? `<img src="${imgData}" class="msg-attached-img" alt="Encrypted attachment" />` : '';
+        let textHtml = text    ? `<div class="msg-bubble-text">${esc(text).replace(/\n/g, '<br>')}</div>` : '';
+
+        div.innerHTML = `
+            <div class="msg-sender">${esc(sender)}</div>
+            <div class="msg-bubble-wrap">
+                <div class="msg-bubble">
+                    ${quoteHtml}
+                    ${textHtml}
+                    ${imgHtml}
+                </div>
+                <button class="msg-reply-btn"
+                        onclick="setReply('${id}')"
+                        aria-label="Reply to this message">↩</button>
+            </div>
+            <div class="msg-time">${time}</div>`;
+
+        container.appendChild(div);
+        container.scrollTop = container.scrollHeight;
+    }
+
+    window.scrollToMessage = function (msgId) {
+        const el = document.getElementById('msg-' + msgId);
+        if (!el) return;
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        const bubble = el.querySelector('.msg-bubble');
+        if (bubble) {
+            bubble.classList.add('flash-highlight');
+            setTimeout(() => bubble.classList.remove('flash-highlight'), 1500);
+        }
+    };
+
+    // ── Session Teardown Cleanups ──
+    window.leaveRoom = function () {
+        if (!confirm('Leave the room?')) return;
+        if (presenceRef) remove(presenceRef);
+        if (typingRef)   remove(typingRef);
+
+        // FIX: Unsubscribe all listeners cleanly
+        detachListeners();
+
+        messagesRef = presenceRef = typingRef = null;
+        document.getElementById('messagesDiv').innerHTML = `
+            <div class="empty-state" id="emptyState">
+                <div class="empty-icon">💬</div>
+                <div class="empty-title">Room is ready</div>
+                <div class="empty-sub">Messages appear once both users are connected.</div>
+            </div>`;
+        cancelReply();
+        clearSelectedImage();
+        document.getElementById('chatScreen').classList.remove('open');
+    };
+
+    // ── Auxiliary Helpers ──
+    function clearTyping() {
+        clearTimeout(typingTimeout);
+        if (typingRef) set(typingRef, false);
+    }
+    function hideEmpty() {
+        const e = document.getElementById('emptyState');
+        if (e) e.remove();
+    }
+    function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
+    function esc(s) {
+        if (!s) return '';
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    // ── UI Responsive Intercept Inputs ──
+    const msgInput = document.getElementById('msgInput');
+    msgInput.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        if (typingRef) {
+            set(typingRef, true);
             clearTimeout(typingTimeout);
-            if (typingRef) set(typingRef, false);
+            typingTimeout = setTimeout(() => { if (typingRef) set(typingRef, false); }, 2500);
         }
-        function hideEmpty() {
-            const e = document.getElementById('emptyState');
-            if (e) e.remove();
-        }
-        function showErr(el, msg) { el.textContent = msg; el.classList.add('show'); }
-        function esc(s) {
-            if (!s) return '';
-            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-        }
+    });
 
-        // ── UI Responsive Intercept Inputs ──
-        const msgInput = document.getElementById('msgInput');
-        msgInput.addEventListener('input', function () {
-            this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
-            if (typingRef) {
-                set(typingRef, true);
-                clearTimeout(typingTimeout);
-                typingTimeout = setTimeout(() => { if (typingRef) set(typingRef, false); }, 2500);
+    msgInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            if (window.matchMedia('(pointer: fine)').matches) {
+                e.preventDefault();
+                window.sendMessage();
             }
-        });
+        }
+    });
 
-        msgInput.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                if (window.matchMedia('(pointer: fine)').matches) {
-                    e.preventDefault();
-                    window.sendMessage();
-                }
-            }
-        });
-
-        document.getElementById('passwordInput').addEventListener('keydown', function (e) {
-            if (e.key === 'Enter') window.joinRoom();
-        });
-    </script>
+    document.getElementById('passwordInput').addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') window.joinRoom();
+    });
+</script>
 </body>
 </html>
